@@ -1,0 +1,19 @@
+quando professor deve permitir escolher mais de uma área
+
+Trocar Gestor por Orientador (Instituição de ensino)
+Criar table Orientador
+
+tabela professor - trocar id_instituicao por id_escola
+
+trocar nome da tabela proposta_estagio por estagio
+acrescentar o id_orientador
+
+acrescentar o id_orientador no estagio
+
+escola tem o id_regional e não está como FK
+
+avaliar deletar telefone_esola e telefone_regional
+
+ou deletar perfil_usuario e colocar o perfil em cada tabela 
+ou adicionar colunas data_inicio data_fim na tabela perfil_usuario
+

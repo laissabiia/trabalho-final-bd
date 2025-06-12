@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro - SIESU</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="centralizado">
+    <form class="form-container" id="cadastroForm" autocomplete="on">
+        <h2>Criar Conta</h2>
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" required autocomplete="name">
+
+        <label for="email">E-mail</label>
+        <input type="email" id="email" required autocomplete="username">
+
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" required autocomplete="new-password">
+
+        <label for="perfil">Tipo de Usuário</label>
+        <select id="perfil" required>
+            <option value="">Selecione o tipo</option>
+            <option value="aluno">Aluno</option>
+            <option value="orientador">Orientador</option>
+            <option value="professor">Professor</option>
+        </select>
+
+        <!-- Aluno/Orientador: Instituição e Curso -->
+        <div id="alunoOrientadorCampos" style="display:none;">
+            <label for="instituicao">Instituição</label>
+            <select id="instituicao">
+                <option value="">Selecione a instituição</option>
+            </select>
+
+            <label for="curso">Curso</label>
+            <select id="curso">
+                <option value="">Selecione o curso</option>
+            </select>
+        </div>
+
+        <!-- Professor: Escola e Área -->
+        <div id="professorCampos" style="display:none;">
+            <label for="escola">Escola</label>
+            <select id="escola">
+                <option value="">Selecione a escola</option>
+            </select>
+
+            <label for="area">Área</label>
+            <select id="area">
+                <option value="">Selecione a área</option>
+            </select>
+        </div>
+
+        <div class="mensagem erro" id="erroMsg" style="display:none;"></div>
+        <button type="submit">Cadastrar</button>
+        <div style="text-align: center; margin-top: 18px;">
+            Já possui conta? <a href="index.html">Entrar</a>
+        </div>
+    </form>
+</div>
+<script src="js/api.js"></script>
+<script src="js/cadastro.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Proposta de Estágio</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .centralizado {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .form-container {
+            background: #fff;
+            padding: 32px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 450px;
+        }
+        .form-container h2 {
+            text-align: center;
+        }
+        .form-container label {
+            margin-top: 14px;
+            display: block;
+        }
+        .form-container select,
+        .form-container input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+        }
+        .form-container button {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #1e8ad6;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .form-container button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<div class="centralizado">
+    <form id="novaPropostaForm" class="form-container">
+        <h2>Nova Proposta de Estágio</h2>
+
+        <label for="escolaSelect">Escola</label>
+        <select id="escolaSelect" required>
+            <option value="">Selecione a escola</option>
+        </select>
+
+        <label for="modalidadeSelect" style="display:none;">Modalidade</label>
+        <select id="modalidadeSelect" style="display:none;" required>
+            <option value="">Selecione a modalidade</option>
+        </select>
+
+        <label for="areaSelect" style="display:none;">Área</label>
+        <select id="areaSelect" style="display:none;" required>
+            <option value="">Selecione a área</option>
+        </select>
+
+        <label for="professorSelect" style="display:none;">Professor</label>
+        <select id="professorSelect" style="display:none;" required>
+            <option value="">Selecione o professor</option>
+        </select>
+
+        <label for="arquivoPDF" style="display:none;">Arquivo PDF</label>
+        <input type="file" id="arquivoPDF" accept="application/pdf" style="display:none;" required>
+
+        <button type="submit" id="enviarBtn" disabled>Enviar Proposta</button>
+    </form>
+</div>
+<script src="js/api.js"></script>
+<script src="js/nova_proposta.js"></script>
+</body>
+</html>

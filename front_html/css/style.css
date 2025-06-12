@@ -1,0 +1,151 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #222;
+}
+
+body {
+    /* Aqui vai o fundo da imagem */
+    background: url('../img/desenho_estudantes.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.7); /* ajuste aqui a opacidade para melhor resultado */
+    pointer-events: none;
+    z-index: 0;
+}
+.centralizado, .form-container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Centralização vertical/horizontal do conteúdo principal */
+.centralizado {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container dos formulários e caixas principais */
+.form-container {
+    background: #fff;
+    padding: 32px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 450px;
+}
+
+.form-container h2, .form-container h1 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #222;
+    font-size: 2rem;
+}
+
+.form-container label {
+    display: block;
+    margin-top: 16px;
+    font-weight: 500;
+}
+
+.form-container input[type="text"],
+.form-container input[type="email"],
+.form-container input[type="password"],
+.form-container select,
+.form-container input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e0e3ea;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-top: 6px;
+    box-sizing: border-box;
+    background: #fafcff;
+    transition: border 0.2s;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+    border: 1.5px solid #89c4fa;
+    outline: none;
+    background: #fff;
+}
+
+.form-container button {
+    margin-top: 24px;
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    background: #1e8ad6;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.form-container button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Para tabelas em páginas de consulta/lista */
+.form-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+    background: #fafcff;
+}
+
+.form-container th, .form-container td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e3ea;
+    text-align: left;
+    font-size: 0.97rem;
+}
+
+.form-container th {
+    background: #f0f5fb;
+    font-weight: 600;
+}
+
+@media (max-width: 520px) {
+    .form-container {
+        padding: 16px 5vw;
+        max-width: 98vw;
+    }
+    .form-container h2, .form-container h1 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Mensagens de erro ou sucesso */
+.form-container .mensagem {
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.form-container .mensagem.erro {
+    background: #ffe7e7;
+    color: #bb2323;
+    border: 1px solid #ffcccc;
+}
+
+.form-container .mensagem.sucesso {
+    background: #e7ffe7;
+    color: #1c7c37;
+    border: 1px solid #b3ffb3;
+}
