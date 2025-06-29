@@ -1,31 +1,76 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>SIESU - Minhas Propostas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <title>Propostas de Estágio - SIESU</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="bg"></div>
-  <div class="container" style="align-items: stretch;">
-    <div class="siesu-logo" style="border-radius: 30px 30px 30px 30px; margin-bottom: 16px;">
-      SIESU<br>
-      <span style="font-size: 1rem; font-weight:400;">Minhas Propostas de Estágio</span>
+<div class="centralizado">
+    <h2>Propostas de Estágio</h2>
+
+    <!-- Botão Nova Proposta (apenas para alunos) -->
+    <div id="acoesAluno" class="acoes-container" style="display:none; margin-bottom: 16px;">
+        <button id="btnNovaProposta" class="btn">Nova Proposta</button>
     </div>
-    <div style="background: rgba(255,255,255,0.96); border-radius: 20px; box-shadow: 0 4px 24px 0 rgba(60,60,60,0.12); padding: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span id="bemvindo"></span>
-        <button id="logoutBtn">Sair</button>
-      </div>
-      <button id="novaPropostaBtn" style="margin-top: 10px;">Nova Proposta</button>
-      <div id="listaPropostas" style="margin-top: 18px;">
-        <!-- Propostas carregadas via JS -->
-      </div>
+
+    <!-- Mensagem quando não há propostas -->
+    <div id="semProposta" class="mensagem info" style="display:none; margin-bottom: 16px;">
+        Não há propostas de estágio.
     </div>
-  </div>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/propostas.js"></script>
+
+    <!-- Tabela de propostas -->
+    <div class="table-container" style="margin-bottom: 16px;">
+        <table id="tabelaPropostas" class="table" style="display:none; width:100%;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Escola</th>
+                    <th>Área</th>
+                    <th>Modalidade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas geradas dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Formulário de nova proposta -->
+    <div id="formNovaProposta" class="form-container" style="display: none;">
+        <h3>Nova Proposta de Estágio</h3>
+        <label for="selectEscola">Escola</label>
+        <select id="selectEscola" required class="input-select">
+            <option value="">Selecione a escola</option>
+        </select>
+
+        <label for="selectArea">Área</label>
+        <select id="selectArea" required class="input-select">
+            <option value="">Selecione a área</option>
+        </select>
+
+        <label for="selectModalidade">Modalidade</label>
+        <select id="selectModalidade" required class="input-select">
+            <option value="">Selecione a modalidade</option>
+        </select>
+
+        <label for="selectOrientador">Orientador</label>
+        <select id="selectOrientador" required class="input-select">
+            <option value="">Selecione o orientador</option>
+        </select>
+
+        <div class="mensagem erro" id="erroProposta" style="display:none;"></div>
+        <div class="botoes-form">
+            <button id="btnEnviarProposta" class="btn">Enviar Proposta</button>
+            <button id="btnCancelarProposta" class="btn-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/propostas.js"></script>
 </body>
 </html>

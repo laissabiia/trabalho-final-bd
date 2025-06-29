@@ -10,6 +10,7 @@
 <div class="centralizado">
     <form class="form-container" id="cadastroForm" autocomplete="on">
         <h2>Criar Conta</h2>
+
         <label for="nome">Nome</label>
         <input type="text" id="nome" required autocomplete="name">
 
@@ -20,7 +21,7 @@
         <input type="password" id="senha" required autocomplete="new-password">
 
         <label for="perfil">Tipo de Usuário</label>
-        <select id="perfil" required>
+        <select id="perfil" name="id_tipo" required>
             <option value="">Selecione o tipo</option>
             <option value="aluno">Aluno</option>
             <option value="orientador">Orientador</option>

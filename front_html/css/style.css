@@ -1,3 +1,4 @@
+/* === RESET E BASE === */
 html, body {
     height: 100%;
     margin: 0;
@@ -6,35 +7,38 @@ html, body {
     color: #222;
 }
 
+/* Fundo com sobreposição branca sem afetar o conteúdo */
 body {
-    /* Aqui vai o fundo da imagem */
-    background: url('../img/desenho_estudantes.png') no-repeat center center fixed;
+    background: url('./img/desenho_estudantes.png') no-repeat center center fixed;
     background-size: cover;
     position: relative;
 }
-
 body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.7); /* ajuste aqui a opacidade para melhor resultado */
+    background: rgba(255,255,255,0.7);
     pointer-events: none;
     z-index: 0;
 }
-.centralizado, .form-container {
-    position: relative;
-    z-index: 1;
-}
 
-/* Centralização vertical/horizontal do conteúdo principal */
+/* === CONTAINERS GERAIS === */
+/* Centraliza em coluna, itens um abaixo do outro */
 .centralizado {
-    min-height: 100vh;
+    position: relative; /* acima do overlay */
+    z-index: 1;
+
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
 }
 
-/* Container dos formulários e caixas principais */
+/* Estilo de todos os formulários */
 .form-container {
     background: #fff;
     padding: 32px 40px;
@@ -42,38 +46,44 @@ body::before {
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     width: 100%;
     max-width: 450px;
+    box-sizing: border-box;
+    margin-bottom: 24px;
 }
 
-.form-container h2, .form-container h1 {
+/* Títulos dos formulários */
+.form-container h1,
+.form-container h2,
+.form-container h3 {
     text-align: center;
     font-weight: 600;
     margin-bottom: 24px;
     color: #222;
-    font-size: 2rem;
 }
+.form-container h1 { font-size: 2rem; }
+.form-container h2 { font-size: 2rem; }
+.form-container h3 { font-size: 1.5rem; }
 
+/* Labels e inputs */
 .form-container label {
     display: block;
     margin-top: 16px;
     font-weight: 500;
 }
-
 .form-container input[type="text"],
 .form-container input[type="email"],
 .form-container input[type="password"],
-.form-container select,
-.form-container input[type="file"] {
+.form-container input[type="file"],
+.form-container select {
     width: 100%;
     padding: 10px;
+    margin-top: 6px;
     border: 1px solid #e0e3ea;
     border-radius: 6px;
-    font-size: 1rem;
-    margin-top: 6px;
-    box-sizing: border-box;
     background: #fafcff;
-    transition: border 0.2s;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border 0.2s, background 0.2s;
 }
-
 .form-container input:focus,
 .form-container select:focus {
     border: 1.5px solid #89c4fa;
@@ -81,6 +91,7 @@ body::before {
     background: #fff;
 }
 
+/* Botões primários */
 .form-container button {
     margin-top: 24px;
     width: 100%;
@@ -94,58 +105,118 @@ body::before {
     cursor: pointer;
     transition: background 0.2s;
 }
-
 .form-container button:disabled {
     background: #cccccc;
     cursor: not-allowed;
 }
 
-/* Para tabelas em páginas de consulta/lista */
-.form-container table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 18px;
-    background: #fafcff;
-}
-
-.form-container th, .form-container td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #e0e3ea;
-    text-align: left;
-    font-size: 0.97rem;
-}
-
-.form-container th {
-    background: #f0f5fb;
-    font-weight: 600;
-}
-
-@media (max-width: 520px) {
-    .form-container {
-        padding: 16px 5vw;
-        max-width: 98vw;
-    }
-    .form-container h2, .form-container h1 {
-        font-size: 1.3rem;
-    }
-}
-
-/* Mensagens de erro ou sucesso */
+/* Mensagens (erro / sucesso) dentro de formulários */
 .form-container .mensagem {
     margin-top: 14px;
     padding: 10px;
     border-radius: 6px;
     font-size: 1rem;
 }
-
 .form-container .mensagem.erro {
     background: #ffe7e7;
     color: #bb2323;
     border: 1px solid #ffcccc;
 }
-
 .form-container .mensagem.sucesso {
     background: #e7ffe7;
     color: #1c7c37;
     border: 1px solid #b3ffb3;
+}
+
+/* Ajuste responsivo */
+@media (max-width: 520px) {
+    .form-container {
+        padding: 16px 5vw;
+        max-width: 98vw;
+    }
+    .form-container h1,
+    .form-container h2,
+    .form-container h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* === TABELAS === */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 16px 0;
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+}
+.table th,
+.table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 0.97rem;
+}
+.table th {
+    background-color: #f4f4f4;
+    font-weight: 600;
+}
+
+/* === PROPOSTAS (específico) === */
+/* Botão Nova Proposta alinhado à direita */
+.acoes-container {
+    width: 100%;
+    text-align: center;
+    margin: 16px 0;
+}
+.btn, .btn-secondary {
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.btn {
+    background-color: #1a73e8;
+    color: #fff;
+    border: none;
+}
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+}
+
+/* Mensagem de 'sem propostas' */
+.mensagem.info {
+    width: 100%;
+    text-align: center;
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 4px;
+    background-color: #e7f3fe;
+    color: #1a73e8;
+    font-size: 1rem;
+    display: block;
+}
+
+/* Formulário de nova proposta específico */
+#formNovaProposta {
+    width: 100%;
+    max-width: 800px;
+    background: #fafafa;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 24px;
+}
+.input-select {
+    margin: 8px 0;
+}
+.botoes-form {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin: 16px 0;
 }

@@ -1,91 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Nova Proposta de Estágio</title>
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        .centralizado {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .form-container {
-            background: #fff;
-            padding: 32px 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 450px;
-        }
-        .form-container h2 {
-            text-align: center;
-        }
-        .form-container label {
-            margin-top: 14px;
-            display: block;
-        }
-        .form-container select,
-        .form-container input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-        }
-        .form-container button {
-            margin-top: 18px;
-            width: 100%;
-            padding: 10px;
-            border: none;
-            background: #1e8ad6;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .form-container button:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Nova Proposta de Estágio - SIESU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="centralizado">
-    <form id="novaPropostaForm" class="form-container">
-        <h2>Nova Proposta de Estágio</h2>
+  <div class="centralizado">
+    <h2>Nova Proposta de Estágio</h2>
 
-        <label for="escolaSelect">Escola</label>
-        <select id="escolaSelect" required>
-            <option value="">Selecione a escola</option>
+    <div class="form-container">
+      <h3>Pesquisar por</h3>
+      <div class="radio-group">
+        <label><input type="radio" name="modoBusca" value="escola" checked> Escola → Área/Modalidade</label>
+        <label><input type="radio" name="modoBusca" value="area"> Área → Escola/Modalidade</label>
+      </div>
+
+      <div id="fluxoEscola" class="fluxo">
+        <label for="selectEscola">Escola</label>
+        <select id="selectEscola" class="input-select">
+          <option value="">Selecione a escola</option>
         </select>
 
-        <label for="modalidadeSelect" style="display:none;">Modalidade</label>
-        <select id="modalidadeSelect" style="display:none;" required>
-            <option value="">Selecione a modalidade</option>
+        <label for="selectAreaEscola">Área</label>
+        <select id="selectAreaEscola" class="input-select">
+          <option value="">Selecione a área</option>
         </select>
 
-        <label for="areaSelect" style="display:none;">Área</label>
-        <select id="areaSelect" style="display:none;" required>
-            <option value="">Selecione a área</option>
+        <label for="selectModalidadeEscola">Modalidade</label>
+        <select id="selectModalidadeEscola" class="input-select">
+          <option value="">Selecione a modalidade</option>
+        </select>
+      </div>
+
+      <div id="fluxoArea" class="fluxo" style="display:none;">
+        <label for="selectArea">Área</label>
+        <select id="selectArea" class="input-select">
+          <option value="">Selecione a área</option>
         </select>
 
-        <label for="professorSelect" style="display:none;">Professor</label>
-        <select id="professorSelect" style="display:none;" required>
-            <option value="">Selecione o professor</option>
+        <label for="selectEscolaArea">Escola</label>
+        <select id="selectEscolaArea" class="input-select">
+          <option value="">Selecione a escola</option>
         </select>
 
-        <label for="arquivoPDF" style="display:none;">Arquivo PDF</label>
-        <input type="file" id="arquivoPDF" accept="application/pdf" style="display:none;" required>
+        <label for="selectModalidadeArea">Modalidade</label>
+        <select id="selectModalidadeArea" class="input-select">
+          <option value="">Selecione a modalidade</option>
+        </select>
+      </div>
 
-        <button type="submit" id="enviarBtn" disabled>Enviar Proposta</button>
-    </form>
-</div>
-<script src="js/api.js"></script>
-<script src="js/nova_proposta.js"></script>
+      <div class="botoes-form">
+        <button id="btnEnviarNova" class="btn">Enviar Proposta</button>
+        <button id="btnCancelarNova" class="btn-secondary">Cancelar</button>
+      </div>
+
+      <div class="mensagem erro" id="erroNova" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nova_proposta.js"></script>
 </body>
 </html>

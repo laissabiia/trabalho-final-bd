@@ -1,56 +1,102 @@
 // js/propostas.js
+console.log('[propostas.js] script loaded');
 
-// Protege a página (redireciona se não estiver logado)
-if (!isAuthenticated()) {
-  window.location.href = "index.html";
-}
-
-// Mostra o nome do usuário (opcional, pode ler do token)
-let usuarioNome = "";
-try {
-  const token = getToken();
-  if (token) {
-    // Decodifica só o payload (não valida assinatura)
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    usuarioNome = payload.nome || payload.email || "";
+document.addEventListener('DOMContentLoaded', async () => {
+  // Valida token
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'index.html';
+    return;
   }
-} catch {}
-document.getElementById("bemvindo").textContent = usuarioNome ? "Bem-vindo, " + usuarioNome : "";
+  const headers = { 'Authorization': 'Bearer ' + token };
 
-// Logout
-document.getElementById("logoutBtn").onclick = function() {
-  removeToken();
-  window.location.href = "index.html";
-};
-
-// Carregar propostas do usuário
-async function carregarPropostas() {
-  const lista = document.getElementById("listaPropostas");
-  lista.innerHTML = "Carregando...";
+  // Decodifica payload JWT
+  let payload;
   try {
-    const resp = await fetch(apiUrl("/api/propostas"), {
-      headers: { Authorization: "Bearer " + getToken() }
+    payload = JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    console.error('[propostas.js] Falha ao decodificar token', e);
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+    return;
+  }
+  const userId = payload.id;
+
+  // Obtém perfis do usuário
+  let tiposUsuario;
+  try {
+    const resTipos = await fetch(apiUrl(`/api/usuarios/${userId}/tipos`), { headers });
+    if (!resTipos.ok) throw new Error('Erro ao carregar perfis');
+    tiposUsuario = await resTipos.json();
+  } catch (e) {
+    console.error('[propostas.js] erro ao buscar tipos do usuário', e);
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+    return;
+  }
+
+  const isAluno = tiposUsuario.some(t => t.id_tipo === 1);
+
+  // Botão Nova Proposta
+  const acoesAlunoEl = document.getElementById('acoesAluno');
+  if (isAluno) {
+    acoesAlunoEl.style.display = 'block';
+    document.getElementById('btnNovaProposta').addEventListener('click', () => {
+      window.location.href = 'nova_proposta.html';
     });
-    if (!resp.ok) throw new Error("Erro ao buscar propostas");
+  }
+
+  // Carrega e exibe propostas
+  try {
+    const resp = await fetch(apiUrl('/api/propostas'), { headers });
+    if (!resp.ok) throw new Error('Erro ao carregar propostas');
     const propostas = await resp.json();
+
+    const tabelaEl = document.getElementById('tabelaPropostas');
+    const tbody = tabelaEl.querySelector('tbody');
+    const semPropostaEl = document.getElementById('semProposta');
+
     if (!propostas.length) {
-      lista.innerHTML = "<div>Nenhuma proposta cadastrada.</div>";
+      tabelaEl.style.display = 'none';
+      semPropostaEl.style.display = 'block';
+      if (isAluno) {
+        semPropostaEl.textContent = 'Não há propostas cadastradas. Inclua uma proposta.';
+      } else {
+        semPropostaEl.textContent = 'Não há propostas cadastradas. Aguarde alguma proposta.';
+      }
       return;
     }
-    lista.innerHTML = "";
-    propostas.forEach(p => {
-      const div = document.createElement("div");
-      div.style = "margin-bottom:10px; padding: 12px; border-radius:8px; background:#f5f7fa; border:1px solid #e0e0e0;";
-      div.textContent = `Proposta #${p.id_proposta} | Status: ${p.status}`;
-      // Você pode adicionar mais campos/detalhes aqui
-      lista.appendChild(div);
-    });
-  } catch (err) {
-    lista.innerHTML = "Erro ao carregar propostas.";
-  }
-}
-carregarPropostas();
 
-document.getElementById("novaPropostaBtn").onclick = function() {
-  window.location.href = "nova_proposta.html";
-};
+    // Monta tabela quando existem propostas
+    semPropostaEl.style.display = 'none';
+    tabelaEl.style.display = 'table';
+    tbody.innerHTML = '';
+
+    propostas.forEach(p => {
+      const show = (isAluno && p.id_estagiario === userId) ||
+                   (!isAluno && ((p.id_professor === userId) || (p.id_orientador === userId)));
+      if (!show) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.id_proposta}</td>
+        <td>${p.escola_nome}</td>
+        <td>${p.area_nome}</td>
+        <td>${p.modalidade_nome}</td>
+        <td>${p.status}</td>
+        <td><button class="btn" onclick="acompanhar(${p.id_proposta})">Acompanhar</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error('[propostas.js] erro ao carregar propostas', e);
+    document.getElementById('tabelaPropostas').style.display = 'none';
+    const semPropostaEl = document.getElementById('semProposta');
+    semPropostaEl.textContent = 'Erro ao carregar propostas.';
+    semPropostaEl.style.display = 'block';
+  }
+});
+
+// Redireciona para acompanhar
+function acompanhar(id) {
+  window.location.href = `acompanhar.html?id=${id}`;
+}

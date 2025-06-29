@@ -1,4 +1,5 @@
-// routes/usuarioRoutes.js (unificado com perfilUsuarioRoutes)
+// routes/usuarioRoutes.js
+console.log("[usuarioRoutes] Módulo carregado");
 const express = require('express');
 const router = express.Router();
 
@@ -7,21 +8,28 @@ const perfilUsuarioController = require('../controllers/perfilUsuarioController'
 const authMiddleware = require('../middleware/authMiddleware');
 
 // --- ROTAS PÚBLICAS ---
-router.post('/', usuarioController.create); // Cadastro de usuário
-router.get('/tipos', perfilUsuarioController.getTipos); // Lista de tipos públicos
+// Cria usuário
+router.post('/', (req, res, next) => {
+  console.log("[usuarioRoutes] POST / - Payload:", req.body);
+  return usuarioController.create(req, res, next);
+});
+// Lista tipos de usuário disponíveis
+router.get('/tipos', (req, res, next) => {
+  console.log("[usuarioRoutes] GET /tipos");
+  return perfilUsuarioController.getTipos(req, res, next);
+});
 
-// --- MIDDLEWARE DE AUTENTICAÇÃO ---
+// --- Middleware de autenticação ---
+// Todas as rotas abaixo exigem token JWT válido
 router.use(authMiddleware);
 
-// --- ROTAS PROTEGIDAS USUÁRIO ---
-router.get('/', usuarioController.findAll);
-router.get('/:id', usuarioController.findById);
-router.put('/:id', usuarioController.update);
-router.delete('/:id', usuarioController.remove);
+// Rotas protegidas
+// Retorna perfis de um usuário específico
+router.get('/:id/tipos', (req, res, next) => {
+  console.log(`[usuarioRoutes] GET /${req.params.id}/tipos`);
+  return perfilUsuarioController.getTiposDoUsuario(req, res, next);
+});
 
-// --- ROTAS PROTEGIDAS PERFIL USUÁRIO ---
-router.get('/:id/tipos', perfilUsuarioController.getTiposDoUsuario);
-router.post('/:id/tipos', perfilUsuarioController.addTipoAoUsuario);
-router.delete('/:id/tipos/:id_tipo', perfilUsuarioController.removeTipoDoUsuario);
+// Outras rotas protegidas de usuário podem ser adicionadas aqui
 
 module.exports = router;

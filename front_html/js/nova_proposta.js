@@ -1,157 +1,131 @@
 // js/nova_proposta.js
 
-document.addEventListener("DOMContentLoaded", function() {
-    const escolaSelect = document.getElementById("escolaSelect");
-    const modalidadeSelect = document.getElementById("modalidadeSelect");
-    const areaSelect = document.getElementById("areaSelect");
-    const professorSelect = document.getElementById("professorSelect");
-    const arquivoPDF = document.getElementById("arquivoPDF");
-    const enviarBtn = document.getElementById("enviarBtn");
-    const labels = {
-        modalidade: document.querySelector("label[for='modalidadeSelect']"),
-        area: document.querySelector("label[for='areaSelect']"),
-        professor: document.querySelector("label[for='professorSelect']"),
-        pdf: document.querySelector("label[for='arquivoPDF']")
-    };
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return window.location.href = 'index.html';
+  const headers = { 'Authorization': 'Bearer ' + token };
 
-    // Utilitário: limpar select
-    function limparSelect(select) {
-        select.innerHTML = '<option value="">Selecione</option>';
+  // Elementos de fluxo
+  const radioGroup = document.getElementsByName('modoBusca');
+  const fluxoEscola = document.getElementById('fluxoEscola');
+  const fluxoArea = document.getElementById('fluxoArea');
+
+  // Selects
+  const selEscola = document.getElementById('selectEscola');
+  const selAreaEscola = document.getElementById('selectAreaEscola');
+  const selModEscola = document.getElementById('selectModalidadeEscola');
+  const selArea = document.getElementById('selectArea');
+  const selEscolaArea = document.getElementById('selectEscolaArea');
+  const selModArea = document.getElementById('selectModalidadeArea');
+
+  // Carrega escolas e áreas iniciais
+  const escolas = await fetch(apiUrl('/api/escolas'), { headers }).then(r => r.json());
+  escolas.forEach(e => selEscola.append(new Option(e.nome, e.id_escola)));
+  selEscolaArea.append(...selEscola.options);
+
+  const areas = await fetch(apiUrl('/api/areas'), { headers }).then(r => r.json());
+  areas.forEach(a => selArea.append(new Option(a.nome, a.id_area)));
+
+  // Muda entre fluxos
+  radioGroup.forEach(rb => rb.addEventListener('change', () => {
+    if (rb.checked) {
+      if (rb.value === 'escola') {
+        fluxoEscola.style.display = '';
+        fluxoArea.style.display = 'none';
+      } else {
+        fluxoEscola.style.display = 'none';
+        fluxoArea.style.display = '';
+      }
+    }
+  }));
+
+  // Fluxo Escola → Área/Modalidade
+  selEscola.addEventListener('change', async () => {
+    const id = selEscola.value;
+    selAreaEscola.innerHTML = '<option value="">Selecione a área</option>';
+    selModEscola.innerHTML = '<option value="">Selecione a modalidade</option>';
+    if (!id) return;
+    const [areasEsc, modEsc] = await Promise.all([
+      fetch(apiUrl(`/api/areas?escola=${id}`), { headers }).then(r => r.json()),
+      fetch(apiUrl(`/api/modalidades?escola=${id}`), { headers }).then(r => r.json())
+    ]);
+    areasEsc.forEach(a => selAreaEscola.append(new Option(a.nome, a.id_area)));
+    modEsc.forEach(m => selModEscola.append(new Option(m.nome, m.id_modalidade)));
+  });
+
+  // Fluxo Área → Escola/Modalidade
+  selArea.addEventListener('change', async () => {
+    const id = selArea.value;
+    selEscolaArea.innerHTML = '<option value="">Selecione a escola</option>';
+    selModArea.innerHTML = '<option value="">Selecione a modalidade</option>';
+    if (!id) return;
+    const escolasArea = await fetch(apiUrl(`/api/escolas?area=${id}`), { headers }).then(r => r.json());
+    escolasArea.forEach(e => selEscolaArea.append(new Option(e.nome, e.id_escola)));
+  });
+
+  selEscolaArea.addEventListener('change', async () => {
+    const id = selEscolaArea.value;
+    selModArea.innerHTML = '<option value="">Selecione a modalidade</option>';
+    if (!id) return;
+    const modEsc = await fetch(apiUrl(`/api/modalidades?escola=${id}`), { headers }).then(r => r.json());
+    modEsc.forEach(m => selModArea.append(new Option(m.nome, m.id_modalidade)));
+  });
+
+  // Envio
+  document.getElementById('btnEnviarNova').addEventListener('click', async () => {
+    const erroEl = document.getElementById('erroNova');
+    erroEl.style.display = 'none';
+
+    const modo = [...radioGroup].find(rb => rb.checked).value;
+    let idEscolaVal, idAreaVal, idModVal;
+    if (modo === 'escola') {
+      idEscolaVal = selEscola.value;
+      idAreaVal = selAreaEscola.value;
+      idModVal = selModEscola.value;
+    } else {
+      idAreaVal = selArea.value;
+      idEscolaVal = selEscolaArea.value;
+      idModVal = selModArea.value;
+    }
+    if (!idEscolaVal || !idAreaVal || !idModVal) {
+      erroEl.textContent = 'Preencha todos os campos do fluxo selecionado.';
+      erroEl.style.display = 'block';
+      return;
     }
 
-    // Preencher escolas
-    fetch(apiUrl("/api/escolas"))
-        .then(r => r.json())
-        .then(data => {
-            data.forEach(escola => {
-                escolaSelect.innerHTML += `<option value="${escola.id_escola}">${escola.nome}</option>`;
-            });
-        });
+    // Prepara FormData para upload de PDF
+    const formData = new FormData();
+    formData.append('id_escola', idEscolaVal);
+    formData.append('id_area', idAreaVal);
+    formData.append('id_modalidade', idModVal);
+    const arquivo = document.getElementById('arquivoPDF');
+    if (!arquivo.files.length) {
+      erroEl.textContent = 'Selecione o arquivo PDF.';
+      erroEl.style.display = 'block';
+      return;
+    }
+    formData.append('arquivo_pdf', arquivo.files[0]);
 
-    // Ao selecionar escola, mostra modalidades e áreas da escola
-    escolaSelect.addEventListener("change", function() {
-        limparSelect(modalidadeSelect);
-        limparSelect(areaSelect);
-        limparSelect(professorSelect);
-        labels.modalidade.style.display = "none";
-        modalidadeSelect.style.display = "none";
-        labels.area.style.display = "none";
-        areaSelect.style.display = "none";
-        labels.professor.style.display = "none";
-        professorSelect.style.display = "none";
-        labels.pdf.style.display = "none";
-        arquivoPDF.style.display = "none";
-        enviarBtn.disabled = true;
+    // Chamada via fetch deixando Content-Type para o browser
+    try {
+      const resp = await fetch(apiUrl('/api/propostas'), {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erro ao enviar proposta.');
+      alert('Proposta enviada com sucesso!');
+      window.location.href = 'propostas.html';
+    } catch (e) {
+      console.error('[nova_proposta.js] erro ao enviar proposta:', e);
+      erroEl.textContent = e.message;
+      erroEl.style.display = 'block';
+    }
+  });
 
-        const id_escola = escolaSelect.value;
-        if (!id_escola) return;
-
-        // Buscar modalidades da escola
-        fetch(apiUrl(`/api/modalidades?escola=${id_escola}`))
-            .then(r => r.json())
-            .then(modalidades => {
-                if (modalidades.length) {
-                    labels.modalidade.style.display = "block";
-                    modalidadeSelect.style.display = "block";
-                    modalidades.forEach(m => {
-                        modalidadeSelect.innerHTML += `<option value="${m.id_modalidade}">${m.nome}</option>`;
-                    });
-                }
-            });
-
-        // Buscar áreas da escola
-        fetch(apiUrl(`/api/areas?escola=${id_escola}`))
-            .then(r => r.json())
-            .then(areas => {
-                if (areas.length) {
-                    labels.area.style.display = "block";
-                    areaSelect.style.display = "block";
-                    areas.forEach(a => {
-                        areaSelect.innerHTML += `<option value="${a.id_area}">${a.nome}</option>`;
-                    });
-                }
-            });
-    });
-
-    // Ao selecionar área, mostra professores da escola e área
-    areaSelect.addEventListener("change", function() {
-        limparSelect(professorSelect);
-        labels.professor.style.display = "none";
-        professorSelect.style.display = "none";
-        labels.pdf.style.display = "none";
-        arquivoPDF.style.display = "none";
-        enviarBtn.disabled = true;
-
-        const id_escola = escolaSelect.value;
-        const id_area = areaSelect.value;
-        if (!id_escola || !id_area) return;
-
-        fetch(apiUrl(`/api/professores?escola=${id_escola}&area=${id_area}`))
-            .then(r => r.json())
-            .then(professores => {
-                if (professores.length) {
-                    labels.professor.style.display = "block";
-                    professorSelect.style.display = "block";
-                    professores.forEach(p => {
-                        professorSelect.innerHTML += `<option value="${p.id_professor}">${p.nome}</option>`;
-                    });
-                }
-            });
-    });
-
-    // Ao selecionar professor, libera PDF
-    professorSelect.addEventListener("change", function() {
-        if (professorSelect.value) {
-            labels.pdf.style.display = "block";
-            arquivoPDF.style.display = "block";
-        } else {
-            labels.pdf.style.display = "none";
-            arquivoPDF.style.display = "none";
-            enviarBtn.disabled = true;
-        }
-    });
-
-    // Só libera o botão quando PDF for selecionado
-    arquivoPDF.addEventListener("change", function() {
-        enviarBtn.disabled = !arquivoPDF.files.length;
-    });
-
-    // Envio do formulário
-    document.getElementById("novaPropostaForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-        enviarBtn.disabled = true;
-
-        // Validar campos obrigatórios
-        if (!escolaSelect.value || !modalidadeSelect.value || !areaSelect.value || !professorSelect.value || !arquivoPDF.files.length) {
-            alert("Preencha todos os campos!");
-            enviarBtn.disabled = false;
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("id_escola", escolaSelect.value);
-        formData.append("id_modalidade", modalidadeSelect.value);
-        formData.append("id_area", areaSelect.value);
-        formData.append("id_professor", professorSelect.value);
-        formData.append("arquivo_pdf", arquivoPDF.files[0]);
-
-        fetch(apiUrl("/api/propostas"), {
-            method: "POST",
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('token')
-            },
-            body: formData
-        })
-        .then(async response => {
-            if (response.ok) {
-                alert("Proposta enviada com sucesso!");
-                window.location.href = "propostas.html";
-            } else {
-                const erro = await response.json();
-                alert("Erro ao enviar proposta: " + (erro.error || "Erro desconhecido"));
-            }
-        })
-        .catch(() => alert("Erro ao enviar proposta."))
-        .finally(() => enviarBtn.disabled = false);
-    });
+  // Cancelar volta para proposta
+  document.getElementById('btnCancelarNova').addEventListener('click', () => {
+    window.location.href = 'propostas.html';
+  });
 });

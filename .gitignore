@@ -4000,3 +4000,5 @@ back_node/node_modules/xtend/package.json
 back_node/node_modules/xtend/README.md
 back_node/node_modules/xtend/test.js
 docs/senhas.txt
+blockchain_microservice/target/rust-analyzer/metadata/sysroot/Cargo.lock
+blockchain_microservice/target/rust-analyzer/metadata/workspace/Cargo.lock

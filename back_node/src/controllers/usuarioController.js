@@ -1,58 +1,72 @@
+// src/controllers/usuarioController.js
+console.log("[usuarioController] Módulo carregado");
 const UsuarioModel = require("../models/usuarioModel");
 const PerfilUsuarioModel = require("../models/perfilUsuarioModel");
 const bcrypt = require("bcryptjs");
 const pool = require("../models/db");
 
 const usuarioController = {
+  // Cria um novo usuário
   async create(req, res) {
-    const { nome, email, senha, tipos } = req.body; // tipos = array de id_tipo
-    try {
-      const senhaHash = await bcrypt.hash(senha, 10); // hash da senha
-      const usuario = await UsuarioModel.create(nome, email, senhaHash);
+    console.log("[usuarioController.create] Payload recebido:", req.body);
+    const { nome, email, senha, tipos, id_tipo, id_instituicao, id_curso, id_escola, id_area } = req.body;
+    let tiposArray = [];
+    if (Array.isArray(tipos)) {
+      tiposArray = tipos.slice();
+    } else if (id_tipo) {
+      tiposArray = [id_tipo];
+    }
+    console.log("[usuarioController.create] tiposArray resultante:", tiposArray);
 
-      // Vincula os perfis, se enviados
-      if (tipos && Array.isArray(tipos) && tipos.length > 0) {
-        for (const id_tipo of tipos) {
-          await PerfilUsuarioModel.addTipoAoUsuario(
-            usuario.id_usuario,
-            id_tipo
-          );
-        }
+    try {
+      const senhaHash = await bcrypt.hash(senha, 10);
+      // Inclui id_tipo na criação do usuario
+      const usuario = await UsuarioModel.create(nome, email, senhaHash, id_tipo);
+
+      // Vincula perfis ao usuário
+      for (const tipoId of tiposArray) {
+        await PerfilUsuarioModel.addTipoAoUsuario(usuario.id_usuario, tipoId);
       }
 
-      // Se o perfil de aluno (estagiário) for selecionado, cadastra também em estagiario
-      if (tipos && tipos.includes(1)) {
-        const id_instituicao = req.body.id_instituicao || 1;
-        const id_curso = req.body.id_curso || 1;
+      // Inserção em estagiario (perfil aluno)
+      if (tiposArray.includes(1)) {
         await pool.query(
           "INSERT INTO estagiario (id_usuario, id_curso, id_instituicao) VALUES ($1, $2, $3)",
           [usuario.id_usuario, id_curso, id_instituicao]
         );
       }
 
-      // SE foi selecionado perfil de professor, insere na tabela professor
-      if (tipos && tipos.includes(2)) {
-        const id_instituicao = req.body.id_instituicao || 1; // 1 = fallback, mas use o do body
-        await pool.query(
-          "INSERT INTO professor (id_usuario, id_instituicao) VALUES ($1, $2)",
-          [usuario.id_usuario, id_instituicao]
+      // Inserção em professor e vínculo de área (perfil professor)
+      if (tiposArray.includes(3)) {
+        // Primeiro cria o registro de professor
+        const resProfessor = await pool.query(
+          "INSERT INTO professor (id_usuario, id_escola) VALUES ($1, $2) RETURNING id_professor",
+          [usuario.id_usuario, id_escola]
         );
+        const idProfessor = resProfessor.rows[0].id_professor;
+        // Em seguida, vincula a área na tabela de relacionamento
+        if (id_area) {
+          await pool.query(
+            "INSERT INTO professor_area (id_professor, id_area) VALUES ($1, $2)",
+            [idProfessor, id_area]
+          );
+        }
       }
 
-      // Retorna o usuário criado e os tipos vinculados
-      const perfis = tipos
+      const perfis = tiposArray.length
         ? await PerfilUsuarioModel.getTiposDoUsuario(usuario.id_usuario)
         : [];
       res.status(201).json({ ...usuario, perfis });
     } catch (error) {
+      console.error("[usuarioController.create] Erro ao criar usuário:", error);
       res.status(400).json({ error: error.message });
     }
   },
 
+  // Lista todos os usuários com seus perfis
   async findAll(req, res) {
     try {
       const usuarios = await UsuarioModel.findAll();
-      // Para cada usuário, busca os perfis
       const usuariosComPerfis = await Promise.all(
         usuarios.map(async (usuario) => {
           const perfis = await PerfilUsuarioModel.getTiposDoUsuario(
@@ -67,6 +81,7 @@ const usuarioController = {
     }
   },
 
+  // Busca um usuário por ID (com perfis)
   async findById(req, res) {
     try {
       const usuario = await UsuarioModel.findById(req.params.id);
@@ -82,31 +97,32 @@ const usuarioController = {
     }
   },
 
+  // Atualiza dados e perfis de um usuário
   async update(req, res) {
     const { id } = req.params;
-    const { nome, email, senha, tipos } = req.body; // tipos = array de id_tipo
+    const { nome, email, senha, tipos, id_tipo } = req.body;
+    let tiposArray = Array.isArray(tipos) ? tipos.slice() : [];
+    if (!Array.isArray(tiposArray) && id_tipo) {
+      tiposArray = [id_tipo];
+    }
 
     try {
-      // Atualiza dados básicos
       const usuario = await UsuarioModel.update(id, nome, email, senha);
       if (!usuario) {
         return res.status(404).json({ error: "Usuário não encontrado" });
       }
 
-      // Atualiza perfis se enviado o array tipos
-      if (tipos && Array.isArray(tipos)) {
-        // Remove todos os perfis antigos
+      // atualiza perfis: remove antigos e insere novos
+      if (tiposArray.length > 0) {
         const perfisAtuais = await PerfilUsuarioModel.getTiposDoUsuario(id);
         for (const perfil of perfisAtuais) {
           await PerfilUsuarioModel.removeTipoDoUsuario(id, perfil.id_tipo);
         }
-        // Adiciona os perfis novos
-        for (const id_tipo of tipos) {
-          await PerfilUsuarioModel.addTipoAoUsuario(id, id_tipo);
+        for (const tipoId of tiposArray) {
+          await PerfilUsuarioModel.addTipoAoUsuario(id, tipoId);
         }
       }
 
-      // Busca perfis finais
       const perfis = await PerfilUsuarioModel.getTiposDoUsuario(id);
       res.json({ ...usuario, perfis });
     } catch (error) {
@@ -114,6 +130,7 @@ const usuarioController = {
     }
   },
 
+  // Remove um usuário
   async remove(req, res) {
     const { id } = req.params;
     try {

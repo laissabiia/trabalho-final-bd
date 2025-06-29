@@ -5,6 +5,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const alunoOrientadorCampos = document.getElementById("alunoOrientadorCampos");
     const professorCampos = document.getElementById("professorCampos");
 
+    // Mapeamento tipos de usuário para IDs conforme back-end
+    const tipoMap = {
+        aluno: 1,
+        orientador: 2,
+        professor: 3
+    };
+
     // Preencher instituições
     fetch(apiUrl("/api/instituicoes"))
         .then(r => r.json())
@@ -75,27 +82,31 @@ document.addEventListener("DOMContentLoaded", function () {
         const email = document.getElementById("email").value.trim();
         const senha = document.getElementById("senha").value;
         const perfil = perfilSelect.value;
+        const idInstituicao = document.getElementById("instituicao").value;
+        const idCurso = document.getElementById("curso").value;
 
-        let payload = { nome, email, senha, tipo: perfil };
-        let url = apiUrl("/api/usuarios");
-
+        // Obtém o ID numérico do tipo de usuário
+        const idTipo = tipoMap[perfil] || null;
+        
+        // Montagem do payload
+        let payload = { nome, email, senha, id_tipo: idTipo };
         if (perfil === "aluno" || perfil === "orientador") {
-            payload.id_instituicao = document.getElementById("instituicao").value;
-            payload.id_curso = document.getElementById("curso").value;
+            payload.id_instituicao = idInstituicao;
+            payload.id_curso = idCurso;
         }
         if (perfil === "professor") {
             payload.id_escola = document.getElementById("escola").value;
             payload.id_area = document.getElementById("area").value;
         }
 
-        // Envio
-        fetch(url, {
+        fetch(apiUrl("/api/usuarios"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         })
             .then(async r => {
                 if (r.ok) {
+                    alert("Cadastro realizado com sucesso!");
                     window.location.href = "index.html";
                 } else {
                     const erro = await r.json();

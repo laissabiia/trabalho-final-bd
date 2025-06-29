@@ -1,11 +1,12 @@
-const pool = require('./db');
+// src/models/usuarioModel.js
+const pool = require("./db");
 
 const UsuarioModel = {
-  // Cria um novo usuário
-  async create(nome, email, senha) {
+  // Cria um novo usuário com tipo
+  async create(nome, email, senha, id_tipo) {
     const result = await pool.query(
-      'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING *',
-      [nome, email, senha]
+      'INSERT INTO usuario (nome, email, senha, id_tipo) VALUES ($1, $2, $3, $4) RETURNING *',
+      [nome, email, senha, id_tipo]
     );
     return result.rows[0];
   },
@@ -16,17 +17,23 @@ const UsuarioModel = {
     return result.rows;
   },
 
-  // Busca usuário por ID
+  // Busca um usuário por ID
   async findById(id) {
-    const result = await pool.query('SELECT * FROM usuario WHERE id_usuario = $1', [id]);
+    const result = await pool.query(
+      'SELECT * FROM usuario WHERE id_usuario = $1',
+      [id]
+    );
     return result.rows[0];
   },
 
-// Busca usuário pelo e-mail
-async findByEmail(email) {
-  const result = await pool.query('SELECT * FROM usuario WHERE email = $1', [email]);
-  return result.rows[0];
-},
+  // Busca um usuário pelo email (para login)
+  async findByEmail(email) {
+    const result = await pool.query(
+      'SELECT * FROM usuario WHERE email = $1',
+      [email]
+    );
+    return result.rows[0];
+  },
 
   // Atualiza usuário
   async update(id, nome, email, senha) {

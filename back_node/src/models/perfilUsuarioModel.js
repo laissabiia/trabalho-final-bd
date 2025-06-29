@@ -1,37 +1,34 @@
-const pool = require('./db');
+// src/models/perfilUsuarioModel.js
+const pool = require("./db");
 
+// Model para gerenciar o perfil de usuário, usando a coluna id_tipo em usuario
 const PerfilUsuarioModel = {
-  // Lista todos os tipos possíveis
-  async getTipos() {
-    const result = await pool.query('SELECT * FROM tipo_usuario ORDER BY id_tipo');
-    return result.rows;
-  },
-
-  // Lista os tipos de um usuário específico
-  async getTiposDoUsuario(id_usuario) {
+  // Retorna o perfil (tipo) associado ao usuário
+  async getTiposDoUsuario(idUsuario) {
     const result = await pool.query(
-      `SELECT t.* FROM perfil_usuario p
-       JOIN tipo_usuario t ON p.id_tipo = t.id_tipo
-       WHERE p.id_usuario = $1`,
-      [id_usuario]
+      `SELECT t.id_tipo, t.nome
+       FROM usuario u
+       JOIN tipo_usuario t ON u.id_tipo = t.id_tipo
+       WHERE u.id_usuario = $1`,
+      [idUsuario]
     );
     return result.rows;
   },
 
-  // Associa um tipo a um usuário
-  async addTipoAoUsuario(id_usuario, id_tipo) {
-    const result = await pool.query(
-      'INSERT INTO perfil_usuario (id_usuario, id_tipo) VALUES ($1, $2) RETURNING *',
-      [id_usuario, id_tipo]
-    );
-    return result.rows[0];
-  },
-
-  // Remove um tipo de um usuário
-  async removeTipoDoUsuario(id_usuario, id_tipo) {
+  // Define (ou altera) o perfil de usuário
+  async addTipoAoUsuario(idUsuario, idTipo) {
     await pool.query(
-      'DELETE FROM perfil_usuario WHERE id_usuario = $1 AND id_tipo = $2',
-      [id_usuario, id_tipo]
+      `UPDATE usuario SET id_tipo = $1 WHERE id_usuario = $2`,
+      [idTipo, idUsuario]
+    );
+  },
+
+  // Remove o perfil do usuário (se necessário)
+  async removeTipoDoUsuario(idUsuario) {
+    // A coluna id_tipo não permite NULL por constraints, avalie outra estratégia se precisar remover
+    await pool.query(
+      `UPDATE usuario SET id_tipo = NULL WHERE id_usuario = $1`,
+      [idUsuario]
     );
   }
 };
