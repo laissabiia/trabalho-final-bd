@@ -1,5 +1,4 @@
-// routes/usuarioRoutes.js
-console.log("[usuarioRoutes] Módulo carregado");
+// src/routes/usuarioRoutes.js
 const express = require('express');
 const router = express.Router();
 
@@ -9,27 +8,17 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // --- ROTAS PÚBLICAS ---
 // Cria usuário
-router.post('/', (req, res, next) => {
-  console.log("[usuarioRoutes] POST / - Payload:", req.body);
-  return usuarioController.create(req, res, next);
-});
+router.post('/', usuarioController.create);
 // Lista tipos de usuário disponíveis
-router.get('/tipos', (req, res, next) => {
-  console.log("[usuarioRoutes] GET /tipos");
-  return perfilUsuarioController.getTipos(req, res, next);
-});
+router.get('/tipos', perfilUsuarioController.getTipos);
 
-// --- Middleware de autenticação ---
-// Todas as rotas abaixo exigem token JWT válido
+// Autenticação para rotas protegidas
 router.use(authMiddleware);
 
-// Rotas protegidas
-// Retorna perfis de um usuário específico
-router.get('/:id/tipos', (req, res, next) => {
-  console.log(`[usuarioRoutes] GET /${req.params.id}/tipos`);
-  return perfilUsuarioController.getTiposDoUsuario(req, res, next);
-});
+// Retorna perfis de um usuário específico (aluno, professor, orientador)
+router.get('/:id/tipos', perfilUsuarioController.getTiposDoUsuario);
 
-// Outras rotas protegidas de usuário podem ser adicionadas aqui
+// Novo: retorna perfis detalhados (estagiário, professor, orientador) com vínculos
+router.get('/:id/perfil', usuarioController.getPerfil);
 
 module.exports = router;

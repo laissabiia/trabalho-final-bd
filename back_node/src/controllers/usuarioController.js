@@ -1,5 +1,4 @@
 // src/controllers/usuarioController.js
-console.log("[usuarioController] Módulo carregado");
 const UsuarioModel = require("../models/usuarioModel");
 const PerfilUsuarioModel = require("../models/perfilUsuarioModel");
 const bcrypt = require("bcryptjs");
@@ -9,59 +8,114 @@ const usuarioController = {
   // Cria um novo usuário
   async create(req, res) {
     console.log("[usuarioController.create] Payload recebido:", req.body);
-    const { nome, email, senha, tipos, id_tipo, id_instituicao, id_curso, id_escola, id_area } = req.body;
-    let tiposArray = [];
-    if (Array.isArray(tipos)) {
-      tiposArray = tipos.slice();
-    } else if (id_tipo) {
-      tiposArray = [id_tipo];
-    }
+
+    // Campos básicos
+    const { nome, email, senha } = req.body;
+    // Converte id_tipo para número
+    const id_tipo = req.body.id_tipo ? parseInt(req.body.id_tipo, 10) : null;
+    // Converte o array de tipos (caso venha) ou cria array com id_tipo único
+    const tiposArray = Array.isArray(req.body.tipos)
+      ? req.body.tipos.map((t) => parseInt(t, 10))
+      : id_tipo
+      ? [id_tipo]
+      : [];
     console.log("[usuarioController.create] tiposArray resultante:", tiposArray);
+
+    // Converte demais IDs para número (ou null se não vier)
+    const id_curso = req.body.id_curso ? parseInt(req.body.id_curso, 10) : null;
+    const id_instituicao = req.body.id_instituicao
+      ? parseInt(req.body.id_instituicao, 10)
+      : null;
+    const id_escola = req.body.id_escola
+      ? parseInt(req.body.id_escola, 10)
+      : null;
+    const id_area = req.body.id_area ? parseInt(req.body.id_area, 10) : null;
 
     try {
       const senhaHash = await bcrypt.hash(senha, 10);
-      // Inclui id_tipo na criação do usuario
-      const usuario = await UsuarioModel.create(nome, email, senhaHash, id_tipo);
+      // Cria usuário incluindo id_tipo
+      const usuario = await UsuarioModel.create(
+        nome,
+        email,
+        senhaHash,
+        id_tipo
+      );
 
       // Vincula perfis ao usuário
       for (const tipoId of tiposArray) {
-        await PerfilUsuarioModel.addTipoAoUsuario(usuario.id_usuario, tipoId);
+        await PerfilUsuarioModel.addTipoAoUsuario(
+          usuario.id_usuario,
+          tipoId
+        );
       }
 
-      // Inserção em estagiario (perfil aluno)
+      // Perfil ALUNO => insere em estagiario
       if (tiposArray.includes(1)) {
+        if (id_curso == null || id_instituicao == null) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "id_curso e id_instituicao são obrigatórios para perfil aluno.",
+            });
+        }
         await pool.query(
           "INSERT INTO estagiario (id_usuario, id_curso, id_instituicao) VALUES ($1, $2, $3)",
           [usuario.id_usuario, id_curso, id_instituicao]
         );
       }
 
-      // Inserção em professor e vínculo de área (perfil professor)
-      if (tiposArray.includes(3)) {
-        // Primeiro cria o registro de professor
+      // Perfil PROFESSOR => insere em professor e professor_area
+      if (tiposArray.includes(2)) {
+        if (id_escola == null || id_area == null) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "id_escola e id_area são obrigatórios para perfil professor.",
+            });
+        }
         const resProfessor = await pool.query(
           "INSERT INTO professor (id_usuario, id_escola) VALUES ($1, $2) RETURNING id_professor",
           [usuario.id_usuario, id_escola]
         );
         const idProfessor = resProfessor.rows[0].id_professor;
-        // Em seguida, vincula a área na tabela de relacionamento
-        if (id_area) {
-          await pool.query(
-            "INSERT INTO professor_area (id_professor, id_area) VALUES ($1, $2)",
-            [idProfessor, id_area]
-          );
-        }
+        await pool.query(
+          "INSERT INTO professor_area (id_professor, id_area) VALUES ($1, $2)",
+          [idProfessor, id_area]
+        );
       }
 
+      // Perfil ORIENTADOR => insere em orientador
+      if (tiposArray.includes(3)) {
+        if (id_instituicao == null) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "id_instituicao é obrigatório para perfil orientador.",
+            });
+        }
+        await pool.query(
+          "INSERT INTO orientador (id_usuario, id_instituicao) VALUES ($1, $2)",
+          [usuario.id_usuario, id_instituicao]
+        );
+      }
+
+      // Retorna usuário criado e perfis
       const perfis = tiposArray.length
         ? await PerfilUsuarioModel.getTiposDoUsuario(usuario.id_usuario)
         : [];
-      res.status(201).json({ ...usuario, perfis });
+      return res.status(201).json({ ...usuario, perfis });
     } catch (error) {
-      console.error("[usuarioController.create] Erro ao criar usuário:", error);
-      res.status(400).json({ error: error.message });
+      console.error(
+        "[usuarioController.create] Erro ao criar usuário:",
+        error
+      );
+      return res.status(400).json({ error: error.message });
     }
   },
+
 
   // Lista todos os usuários com seus perfis
   async findAll(req, res) {
@@ -140,6 +194,39 @@ const usuarioController = {
       res.status(500).json({ error: error.message });
     }
   },
+
+    /**
+   * GET /api/usuarios/:id/perfil
+   * Retorna os perfis de estagiário e de orientador vinculados ao usuário.
+   */
+  async getPerfil(req, res) {
+    try {
+      const id_usuario = parseInt(req.params.id, 10);
+
+      // Busca estagiário e instituição
+      const estRes = await pool.query(
+        'SELECT id_estagiario, id_instituicao FROM estagiario WHERE id_usuario = $1',
+        [id_usuario]
+      );
+      const estagiario = estRes.rows[0] || null;
+
+      // Busca orientador e instituição
+      const oriRes = await pool.query(
+        'SELECT id_orientador, id_instituicao FROM orientador WHERE id_usuario = $1',
+        [id_usuario]
+      );
+      const orientador = oriRes.rows[0] || null;
+
+      return res.json({
+        id_usuario,
+        estagiario,
+        orientador
+      });
+    } catch (error) {
+      console.error('[usuarioController.getPerfil] Erro ao buscar perfil:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
 };
 
 module.exports = usuarioController;

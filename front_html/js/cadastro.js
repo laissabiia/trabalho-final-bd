@@ -8,21 +8,26 @@ document.addEventListener("DOMContentLoaded", function () {
     // Mapeamento tipos de usuário para IDs conforme back-end
     const tipoMap = {
         aluno: 1,
-        orientador: 2,
-        professor: 3
+        orientador: 3,
+        professor: 2
     };
 
-    // Preencher instituições
-    fetch(apiUrl("/api/instituicoes"))
-        .then(r => r.json())
-        .then(data => {
-            const instituicao = document.getElementById("instituicao");
-            data.forEach(item => {
-                instituicao.innerHTML += `<option value="${item.id_instituicao}">${item.nome}</option>`;
-            });
+    // Função auxiliar para popular selects
+    function populateSelect(selectEl, items, valueKey, textKey) {
+        selectEl.innerHTML = `<option value="">Selecione</option>`;
+        items.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item[valueKey];
+            opt.textContent = item[textKey];
+            selectEl.appendChild(opt);
         });
+    }
 
-    // Preencher cursos (atualizar conforme instituição)
+    // Fetch inicial de instituições e cursos
+    fetch(apiUrl("/api/instituicoes")).then(r => r.json()).then(data => {
+        populateSelect(document.getElementById("instituicao"), data, 'id_instituicao', 'nome');
+    });
+
     document.getElementById("instituicao").addEventListener("change", function () {
         const idInstituicao = this.value;
         const curso = document.getElementById("curso");
@@ -30,39 +35,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!idInstituicao) return;
         fetch(apiUrl(`/api/cursos?instituicao=${idInstituicao}`))
             .then(r => r.json())
-            .then(data => {
-                data.forEach(item => {
-                    curso.innerHTML += `<option value="${item.id_curso}">${item.nome}</option>`;
-                });
-            });
+            .then(data => populateSelect(curso, data, 'id_curso', 'nome'));
     });
 
-    // Preencher escolas
-    fetch(apiUrl("/api/escolas"))
-        .then(r => r.json())
-        .then(data => {
-            const escola = document.getElementById("escola");
-            data.forEach(item => {
-                escola.innerHTML += `<option value="${item.id_escola}">${item.nome}</option>`;
-            });
-        });
-
-    // Preencher áreas (atualizar conforme escola)
-    document.getElementById("escola").addEventListener("change", function () {
-        const idEscola = this.value;
-        const area = document.getElementById("area");
-        area.innerHTML = '<option value="">Selecione a área</option>';
-        if (!idEscola) return;
-        fetch(apiUrl(`/api/areas?escola=${idEscola}`))
-            .then(r => r.json())
-            .then(data => {
-                data.forEach(item => {
-                    area.innerHTML += `<option value="${item.id_area}">${item.nome}</option>`;
-                });
-            });
+    // Fetch completo de escolas e áreas (sem filtros) para cadastro de professor
+    fetch(apiUrl("/api/escolas")).then(r => r.json()).then(data => {
+        populateSelect(document.getElementById("escola"), data, 'id_escola', 'nome');
+    });
+    fetch(apiUrl("/api/areas")).then(r => r.json()).then(data => {
+        populateSelect(document.getElementById("area"), data, 'id_area', 'nome');
     });
 
-    // Regras de exibição de campos conforme o perfil selecionado
+    // Regras de exibição de campos conforme perfil selecionado
     perfilSelect.addEventListener("change", function () {
         alunoOrientadorCampos.style.display = "none";
         professorCampos.style.display = "none";
@@ -82,17 +66,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const email = document.getElementById("email").value.trim();
         const senha = document.getElementById("senha").value;
         const perfil = perfilSelect.value;
-        const idInstituicao = document.getElementById("instituicao").value;
-        const idCurso = document.getElementById("curso").value;
-
-        // Obtém o ID numérico do tipo de usuário
         const idTipo = tipoMap[perfil] || null;
-        
-        // Montagem do payload
+
         let payload = { nome, email, senha, id_tipo: idTipo };
         if (perfil === "aluno" || perfil === "orientador") {
-            payload.id_instituicao = idInstituicao;
-            payload.id_curso = idCurso;
+            payload.id_instituicao = document.getElementById("instituicao").value;
+            payload.id_curso = document.getElementById("curso").value;
         }
         if (perfil === "professor") {
             payload.id_escola = document.getElementById("escola").value;

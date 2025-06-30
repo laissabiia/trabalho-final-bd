@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Acompanhar Estágio - SIESU</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="centralizado">
+        <h2>Acompanhar Estágio</h2>
+
+        <!-- Detalhes do estágio -->
+        <div id="detalhesEstagio" class="detalhes-container">
+            <!-- Será preenchido via JS com informações como escola, área, modalidade, status, etc. -->
+        </div>
+
+        <!-- Histórico de etapas -->
+        <div class="table-container" style="margin-top: 24px;">
+            <h3>Histórico de Etapas</h3>
+            <table id="tabelaEtapas" class="table" style="display:none; width:100%;">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Usuário</th>
+                        <th>Etapa</th>
+                        <th>Documento</th>
+                        <th>Hash</th>
+                        <th>Assinatura</th>
+                        <th>Proof</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Linhas adicionadas dinamicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Dados do blockchain -->
+        <div class="table-container" style="margin-top: 24px;">
+            <h3>Dados Blockchain</h3>
+            <div id="dadosBlockchain">
+                <!-- Será preenchido via JS com metadados gerais do estágio (último block, proof, etc.) -->
+            </div>
+        </div>
+
+        <!-- Formulário de acompanhamento -->
+        <div class="form-container" style="margin-top: 24px;">
+            <label for="msgAcompanhamento">Mensagem</label>
+            <textarea id="msgAcompanhamento" class="input-textarea" rows="4" placeholder="Escreva aqui sua mensagem..."></textarea>
+
+            <label for="fileAcompanhamento" style="margin-top:12px;">Anexar Documento (PDF)</label>
+            <input type="file" id="fileAcompanhamento" accept="application/pdf" class="input-file"/>
+
+            <button id="btnAtualizarEstagio" class="btn" style="margin-top:16px;">Atualizar Estágio</button>
+        </div>
+    </div>
+
+    <script src="js/acompanhar.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html>

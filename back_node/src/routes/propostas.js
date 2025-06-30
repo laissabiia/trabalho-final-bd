@@ -1,10 +1,10 @@
-// src/routes/propostaRoutes.js
+// src/routes/propostas.js
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const authMiddleware = require('../middlewares/auth');
 const propostaController = require('../controllers/propostaController');
 const acompanhamentoController = require('../controllers/acompanhamentoController');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Configuração de armazenamento de uploads
 const storage = multer.diskStorage({
@@ -15,7 +15,7 @@ const upload = multer({ storage });
 
 const router = express.Router();
 
-// Middleware de autenticação em todas as rotas de propostas
+// Autenticação aplicada a todas as rotas de propostas
 router.use(authMiddleware);
 
 // CRUD de propostas
@@ -33,15 +33,3 @@ router.post(
 );
 
 module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-

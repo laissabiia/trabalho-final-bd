@@ -1,9 +1,14 @@
+// src/routes/areaRoutes.js
 const express = require('express');
 const router = express.Router();
+
 const areaController = require('../controllers/areaController');
-const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/', areaController.findAll);
-
+/**
+ * GET /api/areas
+ * Query params:
+ *  - escola: filtra áreas que tenham professores vinculados àquela escola
+ */
+router.get('/', areaController.getAreas);
 
 module.exports = router;

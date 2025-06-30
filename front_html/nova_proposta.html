@@ -11,12 +11,25 @@
     <h2>Nova Proposta de Estágio</h2>
 
     <div class="form-container">
+            <!-- Seletor de Professor (Supervisor de Escola) -->
+      <label for="selectProfessor">Professor</label>
+      <select id="selectProfessor" name="id_professor" class="input-select">
+        <option value="">Selecione o professor</option>
+      </select>
+
+      <!-- Seletor de Orientador (Supervisor de Instituição) -->
+      <label for="selectOrientador">Orientador</label>
+      <select id="selectOrientador" name="id_orientador" class="input-select">
+        <option value="">Selecione o orientador</option>
+      </select>
+
       <h3>Pesquisar por</h3>
       <div class="radio-group">
         <label><input type="radio" name="modoBusca" value="escola" checked> Escola → Área/Modalidade</label>
         <label><input type="radio" name="modoBusca" value="area"> Área → Escola/Modalidade</label>
       </div>
 
+      <!-- Fluxo por Escola -->
       <div id="fluxoEscola" class="fluxo">
         <label for="selectEscola">Escola</label>
         <select id="selectEscola" class="input-select">
@@ -34,6 +47,7 @@
         </select>
       </div>
 
+      <!-- Fluxo por Área -->
       <div id="fluxoArea" class="fluxo" style="display:none;">
         <label for="selectArea">Área</label>
         <select id="selectArea" class="input-select">
@@ -50,6 +64,10 @@
           <option value="">Selecione a modalidade</option>
         </select>
       </div>
+
+      <!-- Upload de PDF -->
+      <label for="arquivoPDF">Documento (PDF)</label>
+      <input type="file" id="arquivoPDF" accept="application/pdf" class="input-select">
 
       <div class="botoes-form">
         <button id="btnEnviarNova" class="btn">Enviar Proposta</button>
