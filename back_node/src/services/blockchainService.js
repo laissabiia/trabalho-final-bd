@@ -11,63 +11,69 @@ const blockchainService = {
   /**
    * Registra uma nova etapa no blockchain (POST /blockchain/registros)
    * @param {{ idEstagio: number, etapa: string, idUsuario: number, idDocumento?: number, mensagem?: string }} data
-   * @returns {Promise<{ hash: string, assinatura: string, proof: { timestamp: string, nonce: number, hash_anterior: string } }>} resultado da transação
    */
   async registerStep({ idEstagio, etapa, idUsuario, idDocumento, mensagem }) {
-    // Monta payload conforme RegistroInput em main.rs
-    const payload = {
-      id_proposta: String(idEstagio),
-      tipo_evento: etapa,
-      hash_documento: idDocumento ? String(idDocumento) : '',
-      assinatura: mensagem || ''
-    };
+    try {
+      const payload = {
+        id_proposta: String(idEstagio),
+        tipo_evento: etapa,
+        hash_documento: idDocumento ? String(idDocumento) : '',
+        assinatura: mensagem || ''
+      };
 
-    const resp = await axios.post(
-      `${BLOCKCHAIN_API_URL}/blockchain/registros`,
-      payload,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-
-    const bloco = resp.data;
-    return {
-      hash: bloco.hash_bloco,
-      assinatura: bloco.assinatura,
-      proof: {
-        timestamp: bloco.timestamp,
-        nonce: bloco.nonce,
-        hash_anterior: bloco.hash_anterior
-      }
-    };
+      const resp = await axios.post(
+        `${BLOCKCHAIN_API_URL}/blockchain/registros`,
+        payload,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      const bloco = resp.data;
+      return {
+        hash: bloco.hash_bloco,
+        assinatura: bloco.assinatura,
+        proof: {
+          timestamp: bloco.timestamp,
+          nonce: bloco.nonce,
+          hash_anterior: bloco.hash_anterior
+        }
+      };
+    } catch (err) {
+      console.error('[blockchainService.registerStep] erro:', err.message);
+      throw err;
+    }
   },
 
   /**
    * Obtém histórico completo de um estágio e retorna dados do último bloco
    * (GET /blockchain/historico/{id_proposta})
-   * @param {number} idEstagio
-   * @returns {Promise<{ lastHash: string|null, proof: object|null }>} dados do chain
    */
   async getChainData(idEstagio) {
-    const resp = await axios.get(
-      `${BLOCKCHAIN_API_URL}/blockchain/historico/${idEstagio}`
-    );
+    try {
+      const resp = await axios.get(
+        `${BLOCKCHAIN_API_URL}/blockchain/historico/${idEstagio}`
+      );
 
-    const historico = Array.isArray(resp.data) ? resp.data : [];
-    if (!historico.length) {
+      const historico = Array.isArray(resp.data) ? resp.data : [];
+      if (!historico.length) {
+        return { lastHash: null, proof: null };
+      }
+      const ultimo = historico[historico.length - 1];
+      return {
+        lastHash: ultimo.hash_bloco,
+        proof: {
+          id_proposta: ultimo.id_proposta,
+          tipo_evento: ultimo.tipo_evento,
+          hash_documento: ultimo.hash_documento,
+          assinatura: ultimo.assinatura,
+          timestamp: ultimo.timestamp,
+          nonce: ultimo.nonce,
+          hash_anterior: ultimo.hash_anterior
+        }
+      };
+    } catch (err) {
+      console.error('[blockchainService.getChainData] erro:', err.message);
+      // Retorna objeto padrão mesmo se falhar conexão ao serviço blockchain
       return { lastHash: null, proof: null };
     }
-    const ultimo = historico[historico.length - 1];
-    return {
-      lastHash: ultimo.hash_bloco,
-      proof: {
-        id_proposta: ultimo.id_proposta,
-        tipo_evento: ultimo.tipo_evento,
-        hash_documento: ultimo.hash_documento,
-        assinatura: ultimo.assinatura,
-        timestamp: ultimo.timestamp,
-        nonce: ultimo.nonce,
-        hash_anterior: ultimo.hash_anterior
-      }
-    };
   }
 };
 

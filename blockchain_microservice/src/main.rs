@@ -114,7 +114,7 @@ async fn main() -> std::io::Result<()> {
             .service(novo_registro)
             .service(historico)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("localhost", 8080))?
     .run()
     .await
 }

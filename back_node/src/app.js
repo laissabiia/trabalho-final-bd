@@ -1,5 +1,6 @@
 // src/app.js
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -39,6 +40,7 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const SERVER = process.env.SERVER || "0.0.0.0";
+app.listen(PORT, SERVER, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });

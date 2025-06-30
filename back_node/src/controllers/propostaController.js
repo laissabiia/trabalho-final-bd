@@ -81,7 +81,7 @@ const propostaController = {
       });
 
       // 8) Registra no blockchain
-      const resp = await fetch("http://127.0.0.1:8080/blockchain/registros", {
+      const resp = await fetch("http://localhost:8080/blockchain/registros", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -181,7 +181,7 @@ const propostaController = {
       });
 
       // Registro em blockchain: id_proposta como string
-      const resp = await fetch("http://127.0.0.1:8080/blockchain/registros", {
+      const resp = await fetch("http://localhost:8080/blockchain/registros", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
