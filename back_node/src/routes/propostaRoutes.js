@@ -1,21 +1,19 @@
 // src/routes/propostaRoutes.js
+
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const propostaController = require('../controllers/propostaController');
 const acompanhamentoController = require('../controllers/acompanhamentoController');
+const documentoEstagioController = require('../controllers/documentoEstagioController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Configuração de armazenamento de uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`)
-});
+// Configura Multer para armazenar arquivos em memória (buffer)
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const router = express.Router();
 
-// Middleware de autenticação em todas as rotas de propostas
+// Aplica autenticação a todas as rotas de propostas
 router.use(authMiddleware);
 
 // CRUD de propostas
@@ -32,16 +30,7 @@ router.post(
   acompanhamentoController.acompanhamento
 );
 
+// Rota para download do PDF armazenado em bytea no DB
+router.get('/documentos/:id/pdf', documentoEstagioController.getPDF);
+
 module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,13 +1,15 @@
 // src/controllers/propostaController.js
+
 const PropostaModel = require("../models/propostaModel");
 const DocumentoEstagioModel = require("../models/documentoEstagioModel");
 const pool = require("../models/db");
-const calcularHashArquivoPDF = require("../utils/calcularHashArquivoPDF");
-const fetch = require("node-fetch").default; // <— Import corrigido
-const path = require("path");
+const fetch = require("node-fetch").default;
+const crypto = require("crypto");
 
 const propostaController = {
+  // Cria nova proposta e faz upload inicial do PDF
   async create(req, res) {
+    let proposta;
     try {
       console.log("[propostaController.create] req.user:", req.user);
 
@@ -15,11 +17,8 @@ const propostaController = {
       const id_usuario =
         (req.user.id_usuario && parseInt(req.user.id_usuario, 10)) ||
         (req.user.id && parseInt(req.user.id, 10));
-      if (!id_usuario) {
-        return res.status(401).json({ error: "Usuário não autenticado." });
-      }
 
-      // 2) Verifica perfil de estagiário
+      // 2) Verifica se é estagiário
       const est = await pool.query(
         "SELECT id_estagiario, id_instituicao FROM estagiario WHERE id_usuario = $1",
         [id_usuario]
@@ -29,7 +28,7 @@ const propostaController = {
       }
       const { id_estagiario, id_instituicao } = est.rows[0];
 
-      // 3) Desestrutura e valida campos
+      // 3) Desestrutura e valida campos da requisição
       const {
         id_escola,
         id_area,
@@ -53,39 +52,51 @@ const propostaController = {
       // 4) Cria registro de estágio (proposta)
       const propostaData = {
         id_estagiario,
-        id_escola: parseInt(id_escola, 10),
-        id_area: parseInt(id_area, 10),
-        id_modalidade: parseInt(id_modalidade, 10),
-        id_professor: parseInt(id_professor, 10),
-        id_orientador: parseInt(id_orientador, 10),
-        status: status || "pendente",
+        id_instituicao,
+        id_escola,
+        id_area,
+        id_modalidade,
+        id_professor,
+        id_orientador,
+        status: status || "submetida",
       };
-      const proposta = await PropostaModel.create(propostaData);
-      console.log("[propostaController.create] Proposta criada:", proposta);
+      proposta = await PropostaModel.create(propostaData);
+      console.log(
+        "[propostaController.create] Proposta criada:",
+        proposta.id_estagio
+      );
 
-      // 5) Processa o PDF enviado
-      if (!req.file || !req.file.path) {
-        return res.status(400).json({ error: "Arquivo PDF não enviado." });
+      // 5) Verifica e obtém o arquivo enviado em memória
+      if (!req.file || !req.file.buffer) {
+        return res.status(400).json({ error: "Arquivo não enviado." });
       }
-      const caminhoPDF = req.file.path;
+      const arquivoBuffer = req.file.buffer;
 
-      // 6) Calcula hash
-      const hashDocumento = await calcularHashArquivoPDF(caminhoPDF);
+      // 6) Calcula hash do PDF
+      const hashDocumento = crypto
+        .createHash("sha256")
+        .update(arquivoBuffer)
+        .digest("hex");
 
-      // 7) Salva metadados no documento_estagio usando id_estagio
+      // 7) Salva metadados no documento_estagio usando id_estagio e binário
       const doc = await DocumentoEstagioModel.create({
-        id_estagio: proposta.id_estagio, // usa a coluna correta
+        id_estagio: proposta.id_estagio,
         tipo_documento: "proposta",
-        caminho_pdf: caminhoPDF,
+        arquivo_pdf: arquivoBuffer,
         hash_documento: hashDocumento,
       });
 
-      // 8) Registra no blockchain
+      console.log(
+        "[propostaController.create] Documento criado:",
+        doc.id_documento
+      );
+
+      // 8) Registra evento no blockchain
       const resp = await fetch("http://localhost:8080/blockchain/registros", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_proposta: String(proposta.id_estagio),
+          id_proposta: proposta.id_estagio.toString(),
           tipo_evento: "proposta_submetida",
           hash_documento: hashDocumento,
           assinatura: "assinatura_simples",
@@ -100,23 +111,19 @@ const propostaController = {
       }
       const bloco = await resp.json();
 
-      // 9) Grava no registro local de blockchain
+      // 9) Grava registro de blockchain no banco local
       await pool.query(
         `INSERT INTO blockchain_registro
          (id_estagio, id_documento, tipo_evento, hash_blockchain)
          VALUES ($1, $2, $3, $4)`,
-        [
-          proposta.id_estagio,
-          doc.id_documento,
-          bloco.tipo_evento,
-          bloco.hash_bloco,
-        ]
+        [proposta.id_estagio, doc.id_documento, bloco.tipo_evento, bloco.hash_bloco]
       );
 
+      // 10) Registra etapa "inclusão" no estagio_etapa
       await pool.query(
         `INSERT INTO estagio_etapa
-    (id_estagio, etapa, id_usuario_assinante, id_documento, hash_blockchain)
-   VALUES ($1, $2, $3, $4, $5)`,
+         (id_estagio, etapa, id_usuario_assinante, id_documento, hash_blockchain)
+         VALUES ($1, $2, $3, $4, $5)`,
         [
           proposta.id_estagio,
           "inclusão",
@@ -127,27 +134,18 @@ const propostaController = {
       );
 
       console.log(
-        "[propostaController.create] Upload e blockchain concluídos",
-        { doc, bloco }
+        "[propostaController.create] Upload e blockchain concluídos"
       );
-
-      return res.status(201).json({
-        proposta,
-        documento: doc,
-        bloco,
-      });
+      return res.status(201).json({ id_proposta: proposta.id_estagio });
     } catch (error) {
-      console.error(
-        "[propostaController.create] Erro ao criar proposta + upload:",
-        error
-      );
+      console.error("[propostaController.create] Erro:", error);
       if (!res.headersSent) {
-        res.status(500).json({ error: error.message });
+        return res.status(400).json({ error: error.message });
       }
     }
   },
 
-  // Upload de PDF e registro no blockchain
+  // Upload adicional de PDF (ou outros documentos) para uma proposta existente
   async uploadDocumento(req, res) {
     try {
       const id_proposta = req.params.id_proposta || req.body.id_proposta;
@@ -156,31 +154,39 @@ const propostaController = {
         id_proposta
       );
 
-      if (!id_proposta) {
-        return res.status(400).json({ error: "ID da proposta ausente." });
+      if (!id_proposta || isNaN(parseInt(id_proposta, 10))) {
+        return res
+          .status(400)
+          .json({ error: "ID da proposta inválido ou ausente." });
       }
 
       const proposta = await PropostaModel.findById(id_proposta);
       if (!proposta) {
         return res.status(404).json({ error: "Proposta não encontrada." });
       }
-      if (!req.file || !req.file.path) {
+
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ error: "Arquivo não enviado." });
       }
+      const arquivoBuffer = req.file.buffer;
 
-      // Calcula hash do PDF
-      const caminhoPDF = req.file.path;
-      const hashDocumento = await calcularHashArquivoPDF(caminhoPDF);
+      // Calcula hash do novo PDF
+      const hashDocumento = crypto
+        .createHash("sha256")
+        .update(arquivoBuffer)
+        .digest("hex");
 
-      // Salva no banco de documentos
+      // Salva no documento_estagio
       const doc = await DocumentoEstagioModel.create({
-        id_estagio: id_proposta,
-        tipo_documento: "proposta",
-        caminho_pdf: caminhoPDF,
+        id_estagio: parseInt(id_proposta, 10),
+        tipo_documento: req.body.tipo_documento || "upload_documento",
+        arquivo_pdf: arquivoBuffer,
         hash_documento: hashDocumento,
       });
 
-      // Registro em blockchain: id_proposta como string
+      console.log("[propostaController.uploadDocumento] Documento salvo:", doc.id_documento);
+
+      // Registra no blockchain
       const resp = await fetch("http://localhost:8080/blockchain/registros", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,48 +197,48 @@ const propostaController = {
           assinatura: "assinatura_simples",
         }),
       });
-
       if (!resp.ok) {
         console.error(
           "[propostaController.uploadDocumento] Erro blockchain:",
           await resp.text()
         );
         return res
-          .status(500)
-          .json({ error: "Erro ao registrar no blockchain." });
+          .status(502)
+          .json({ error: "Falha ao registrar no blockchain." });
       }
-
       const bloco = await resp.json();
-      // Insere registro final no banco local
+
+      // Grava registro local de blockchain
       await pool.query(
         `INSERT INTO blockchain_registro
-         (id_proposta, id_documento, tipo_evento, hash_blockchain)
+         (id_estagio, id_documento, tipo_evento, hash_blockchain)
          VALUES ($1, $2, $3, $4)`,
-        [id_proposta, doc.id_documento, bloco.tipo_evento, bloco.hash_bloco]
+        [
+          parseInt(id_proposta, 10),
+          doc.id_documento,
+          bloco.tipo_evento || "upload_documento",
+          bloco.hash_bloco,
+        ]
       );
 
       console.log(
-        "[propostaController.uploadDocumento] Documento salvo e bloco registrado:"
+        "[propostaController.uploadDocumento] Bloco registrado:",
+        bloco
       );
       return res.status(201).json({ documento: doc, bloco });
     } catch (error) {
-      console.error(
-        "[propostaController.uploadDocumento] Erro ao salvar documento:",
-        error
-      );
+      console.error("[propostaController.uploadDocumento] Erro:", error);
       return res.status(400).json({ error: error.message });
     }
   },
 
-  // Depois (lista só as propostas relacionadas ao usuário)
+  // Lista todas as propostas relacionadas ao usuário
   async findAll(req, res) {
     try {
-      // ID do usuário (estagiário, professor ou orientador)
       const idUsuario = req.user.id_usuario ?? req.user.id;
       if (!idUsuario) {
-        return res.status(401).json({ error: 'Usuário não autenticado.' });
+        return res.status(401).json({ error: "Usuário não autenticado." });
       }
-      // Busca só as propostas onde ele participa
       const propostas = await PropostaModel.findByUser(idUsuario);
       return res.json(propostas);
     } catch (error) {
@@ -253,24 +259,11 @@ const propostaController = {
     }
   },
 
-  // Atualiza proposta
+  // Atualiza dados da proposta
   async update(req, res) {
     try {
-      const payload = req.user;
-      const propostaData = {
-        id_estagiario: payload.id_usuario,
-        id_escola: req.body.id_escola,
-        id_area: req.body.id_area,
-        id_modalidade: req.body.id_modalidade,
-        id_professor: req.body.id_professor,
-        id_orientador: req.body.id_orientador,
-        status: req.body.status || "pendente",
-      };
-      const proposta = await PropostaModel.update(req.params.id, propostaData);
-      if (!proposta) {
-        return res.status(404).json({ error: "Proposta não encontrada." });
-      }
-      return res.json(proposta);
+      const updated = await PropostaModel.update(req.params.id, req.body);
+      return res.json(updated);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

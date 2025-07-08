@@ -1,8 +1,10 @@
 // src/controllers/acompanhamentoController.js
+const fs = require('fs');
 const PropostaModel = require('../models/propostaModel');
 const EstagioEtapaModel = require('../models/estagioEtapaModel');
 const DocumentoEstagioModel = require('../models/documentoEstagioModel');
 const blockchainService = require('../services/blockchainService');
+const crypto = require('crypto');
 
 /**
  * Controller para acompanhamento de estágios: GET para exibir dados e POST para registrar nova etapa
@@ -15,17 +17,12 @@ const AcompanhamentoController = {
   async getAcompanhamento(req, res) {
     try {
       const idEstagio = parseInt(req.params.id, 10);
-      // Recupera a proposta (estágio)
       const proposta = await PropostaModel.findById(idEstagio);
       if (!proposta) {
         return res.status(404).json({ error: 'Estágio não encontrado.' });
       }
-
-      // Busca etapas no DB e dados do blockchain
       const etapas = await EstagioEtapaModel.findByEstagio(idEstagio);
       const blockchain = await blockchainService.getChainData(idEstagio);
-
-      // Retorna JSON com chave "estagio"
       return res.json({ estagio: proposta, etapas, blockchain });
     } catch (err) {
       console.error('[AcompanhamentoController.getAcompanhamento] erro:', err);
@@ -48,13 +45,29 @@ const AcompanhamentoController = {
 
       // Tratamento de upload de documento (PDF)
       let idDocumento = null;
+      let hashDocumento = null;
       if (req.file) {
-        const doc = await DocumentoEstagioModel.create({
-          id_estagio: idEstagio,
-          tipo_documento: 'acompanhamento',
-          caminho_pdf: `uploads/${req.file.filename}`
-        });
-        idDocumento = doc.id_documento;
+        let arquivoBuffer;
+        // memória ou disco
+        if (req.file.buffer) {
+          arquivoBuffer = req.file.buffer;
+        } else if (req.file.path) {
+          arquivoBuffer = await fs.promises.readFile(req.file.path);
+        }
+        if (arquivoBuffer) {
+          hashDocumento = crypto
+            .createHash('sha256')
+            .update(arquivoBuffer)
+            .digest('hex');
+
+          const doc = await DocumentoEstagioModel.create({
+            id_estagio: idEstagio,
+            tipo_documento: 'acompanhamento',
+            arquivo_pdf: arquivoBuffer,
+            hash_documento: hashDocumento
+          });
+          idDocumento = doc.id_documento;
+        }
       }
 
       // Define descrição da etapa
