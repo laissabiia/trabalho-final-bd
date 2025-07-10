@@ -21,7 +21,7 @@ O sistema **SIESU – Sistema de Estágio Supervisionado** visa facilitar a gest
 * Armazenamento de documentos e eventos na blockchain, garantindo integridade e histórico imutável.
 
 ## Documento final de entrega do trabalho:
-![link - arquivo .docx](docs/Carlos_Laissa_Robson_Projeto_Final_08_07.docx)
+[link - arquivo .docx](docs/Carlos_Laissa_Robson_Projeto_Final_08_07.docx)
 
 ## Modelo Entidade-Relacionamento (MER)
 
