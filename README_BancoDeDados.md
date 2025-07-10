@@ -1,4 +1,4 @@
-# SIESU – Sistema para Gestão de Estágios Obrigatórios Supervisionado
+# SIESU – Sistema de Estágio Unificado
 
 **Banco de Dados Turma CIC0097 – 01/2025**
 **Profa. Maristela Holanda**
@@ -12,7 +12,7 @@
 
 ## Introdução
 
-O sistema **SIESU – Sistema de Estágio Supervisionado** visa facilitar a gestão de estágios obrigatórios, envolvendo instituições, estudantes, escolas, professores, documentos e registros em blockchain. Ele permite:
+O sistema **SIESU – Sistema de Estágio Unificado** visa facilitar a gestão de estágios obrigatórios, envolvendo instituições, estudantes, escolas, professores, documentos e registros em blockchain. Ele permite:
 
 * Cadastro de orientadores, professores da rede de ensino e estagiários de quaisquer escolas ou faculdades cadastradas;
 * Login e autenticação de usuários;
