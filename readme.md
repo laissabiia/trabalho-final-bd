@@ -56,4 +56,3 @@ O **SIESU** é um sistema web responsivo, desenvolvido em **Node.js** (backend c
 
 ---
 
-> Cada link acima aponta para o README específico contendo detalhes, requisitos, modelagens e implementações referentes à respectiva disciplina. Quando tiver o conteúdo de cada entrega, basta atualizar os arquivos referenciados.
