@@ -1,215 +1,57 @@
-# SIESU – Sistema para Gestão de Estágios Obrigatórios Supervisionado
+# SIESU – Projeto Unificado de Entregas
 
-**Banco de Dados Turma CIC0097 – 01/2025**
-**Profa. Maristela Holanda**
-**Integrantes:**
-
-* Carlos Iunes – 22/2012738
-* Laíssa Soares – 22/2032982
-* Robson Bezerra da Silva – 22/2035661
+Este repositório reúne a documentação do **SIESU – Sistema para Gestão de Estágios Obrigatórios Supervisionado**, contemplando três entregas distintas para diferentes disciplinas. A seguir, apresentam-se a visão geral do projeto, a arquitetura adotada e os links para os README específicos de cada trabalho.
 
 ---
 
-## Introdução
+## Visão Geral do Projeto
 
-O sistema **SIESU – Sistema de Estágio Supervisionado** visa facilitar a gestão de estágios obrigatórios, envolvendo instituições, estudantes, escolas, professores, documentos e registros em blockchain. Ele permite:
+O **SIESU** é um sistema web responsivo, desenvolvido em **Node.js** (backend com Express e PostgreSQL) e **HTML/JavaScript** (frontend), com os seguintes objetivos:
 
-* Cadastro de orientadores, professores da rede de ensino e estagiários de quaisquer escolas ou faculdades cadastradas;
-* Login e autenticação de usuários;
-* Pesquisa e filtragem de dados (estagiários, instituições, propostas);
-* Registro de etapas de estágio e acompanhamento da documentação necessária;
-* Armazenamento de documentos e eventos na blockchain, garantindo integridade e histórico imutável.
+* **Gerenciar contas de usuários** (estagiários, professores, orientadores) com autenticação JWT;
+* **Cadastrar e consultar** escolas, cursos, propostas de estágio e etapas de documentação;
+* **Registrar etapas e documentos** em blockchain, garantindo a integridade e histórico imutável;
 
-![Figura 1 - Página Inicial do Sistema de Estágio Unificado](docs/imagens/pagina_inicial.png)
+---
 
-## Modelo Entidade-Relacionamento (MER)
+## Arquitetura
 
-![MER do SIESU](docs/imagens/mer.png)
+1. **Camada de Apresentação (Frontend)**
 
-## Modelo Relacional (MR)
+   * HTML, CSS e JavaScript puro;
+   * Comunicação via fetch API (REST) e WebSockets;
 
-![Modelo Relacional](docs/imagens/mr.png)
+2. **Camada de Negócio (Backend)**
 
-## Modelagem Lógica
+   * **Node.js** com **Express**;
+   * Autenticação e autorização JWT;
+   * Separação em controllers, services e models;
 
-![Figura 3 - Modelagem Lógica](docs/imagens/modelagem_logica.png)
+3. **Banco de Dados**
 
-## Álgebra Relacional
+   * **PostgreSQL**;
+   * Modelagem em MER, MR e normalização até 3FN;
 
-**Consulta 1**: nome de cada estagiário, o nome do curso que faz e a instituição à qual pertence:
+4. **Integração Blockchain**
 
-```sql
-πnome_estagiario, nome_curso, nome_instituicao(
-  (estagiario ⨝ estagiario.id_curso == curso.id_curso)
-  ⨝ estagiario.id_instituicao == instituicao.id_instituicao
-)
-```
+   * Registro de eventos/documentos via smart contracts (externo);
 
-**Consulta 2**: apresenta um estágio, a escola onde acontece, sua modalidade e o nome do orientador:
 
-```sql
-πid_estagio, nome_escola, nome_modalidade, nome_orientador(
-  ((estagio ⨝ estagio.id_escola == escola.id_escola)
-   ⨝ estagio.id_modalidade == modalidade.id_modalidade)
-   ⨝ estagio.id_orientador == orientador.id_orientador
-)
-```
+---
 
-**Consulta 3**: telefones das escolas e sua respectiva regional:
+## Entregas por Disciplina
 
-```sql
-πnome_escola, numero_telefone, nome_regional(
-  (telefone_escola ⨝ telefone_escola.id_escola == escola.id_escola)
-  ⨝ escola.id_regional == regional.id_regional
-)
-```
+1. **Banco de Dados**  (CIC0097 – 01/2025)
 
-**Consulta 4**: professores e suas áreas atuando em estágios:
+   * **Profª Maristela Holanda**
+   * [README_BancoDeDados](README_BancoDeDados.md)
 
-```sql
-πnome_professor, nome_area, id_estagio(
-  ((estagio ⨝ estagio.id_professor == professor.id_professor)
-   ⨝ professor.id_professor == professor_area.id_professor)
-   ⨝ professor_area.id_area == area.id_area
-)
-```
+2. **Linguagem de Programação**  (CIC0093 – 01/2025)
 
-**Consulta 5**: estágios e seus documentos registrados em blockchain:
+   * **Prof. Marcelo Ladeira**
+   * [README_LinguagemProg](README_LinguagemProg.md)
 
-```sql
-πid_estagio, tipo_documento, hash_blockchain(
-  (estagio ⨝ estagio.id_estagio == documento_estagio.id_estagio)
-   ⨝ documento_estagio.id_documento == blockchain_registro.id_documento
-)
-```
 
-## Formas Normais
+---
 
-### 1ª Forma Normal (1FN)
-
-* **Regra**: Todos os campos contêm valores atômicos e não repetidos em uma única célula.
-* **Conclusão**: A tabela `tb_estagiario_detalhado` atende à 1FN.
-
-### 2ª Forma Normal (2FN)
-
-* **Regra**: Estar em 1FN e todos os atributos não-chave dependem da chave primária inteira.
-* **Conclusão**: Há apenas uma chave candidata (`id_estagiario`), e todos os atributos não-chave dependem dela. Portanto, atende à 2FN.
-
-### 3ª Forma Normal (3FN)
-
-* **Regra**: Estar em 2FN e nenhum atributo não-chave depende transitivamente da chave primária.
-* **Observação**: Existem dependências transitivas:
-
-  * `nome_usuario`, `email_usuario`, `senha_usuario`, `id_tipo_usuario` dependem de `id_usuario`;
-  * `nome_tipo_usuario` depende de `id_tipo_usuario`;
-  * `nome_curso` depende de `id_curso`;
-  * `nome_instituicao`, `tipo_instituicao`, `cnpj` dependem de `id_instituicao`.
-* **Solução**: Separar em entidades:
-
-  * `tb_estagiario` (PK: `id_estagiario`)
-  * `tb_usuario` (PK: `id_usuario`)
-  * `tb_tipo_usuario` (PK: `id_tipo`)
-  * `tb_curso` (PK: `id_curso`)
-  * `tb_instituicao` (PK: `id_instituicao`)
-
-## Script SQL para `tb_estagiario_detalhado`
-
-```sql
-SELECT
-  e.*,
-  u.nome AS nome_usuario,
-  u.email AS email_usuario,
-  u.senha AS senha_usuario,
-  u.id_tipo AS id_tipo_usuario,
-  tu.nome AS nome_tipo_usuario,
-  c.nome AS nome_curso,
-  i.nome AS nome_instituicao,
-  i.tipo AS tipo_instituicao,
-  i.cnpj
-FROM estagiario e
-INNER JOIN usuario u ON e.id_usuario = u.id_usuario
-INNER JOIN tipo_usuario tu ON u.id_tipo = tu.id_tipo
-INNER JOIN curso c ON e.id_curso = c.id_curso
-INNER JOIN instituicao i ON e.id_instituicao = i.id_instituicao
-WHERE tu.nome = 'aluno';
-```
-
-![Figura 4 - Tabela tb\_estagiario\_detalhado](docs/imagens/tb_estagiario_detalhado.png)
-
-## Pasta de Models
-
-A pasta de models está em `src/models/`. Você pode acessá-la [clicando aqui](src/models/).
-
-### Exemplo de Model
-
-**Arquivo:** `src/models/estagiarioModel.js`
-
-```js
-const db = require('../config/db');
-
-async function getEstagiariosDetalhados() {
-  const query = `
-    SELECT
-      e.*,
-      u.nome AS nome_usuario,
-      u.email AS email_usuario,
-      u.senha AS senha_usuario,
-      u.id_tipo AS id_tipo_usuario,
-      tu.nome AS nome_tipo_usuario,
-      c.nome AS nome_curso,
-      i.nome AS nome_instituicao,
-      i.tipo AS tipo_instituicao,
-      i.cnpj
-    FROM estagiario e
-    INNER JOIN usuario u ON e.id_usuario = u.id_usuario
-    INNER JOIN tipo_usuario tu ON u.id_tipo = tu.id_tipo
-    INNER JOIN curso c ON e.id_curso = c.id_curso
-    INNER JOIN instituicao i ON e.id_instituicao = i.id_instituicao
-    WHERE tu.nome = 'aluno';
-  `;
-  const { rows } = await db.query(query);
-  return rows;
-}
-
-module.exports = { getEstagiariosDetalhados };
-```
-
-## Explicação do SELECT de Exemplo
-
-O `SELECT` acima cria uma visão agregada com detalhes do estagiário, do usuário, do tipo, do curso e da instituição. Veja a explicação passo a passo:
-
-1. **`FROM estagiario e`**
-   Seleciona a tabela principal `estagiario` com o alias **`e`**, que contém os IDs de usuário, curso e instituição.
-
-2. **`e.*`**
-   Inclui todas as colunas de `estagiario` sem listá-las individualmente.
-
-3. **`INNER JOIN usuario u ON e.id_usuario = u.id_usuario`**
-   Conecta `estagiario` à tabela `usuario` (alias **`u`**), trazendo nome, e-mail, senha e o ID do tipo de usuário.
-
-4. **`u.nome AS nome_usuario, u.email AS email_usuario, u.senha AS senha_usuario, u.id_tipo AS id_tipo_usuario`**
-   Renomeia colunas da tabela `usuario` para indicar claramente sua origem.
-
-5. **`INNER JOIN tipo_usuario tu ON u.id_tipo = tu.id_tipo`**
-   Une com `tipo_usuario` (alias **`tu`**) para obter o nome descritivo do tipo de usuário.
-
-6. **`tu.nome AS nome_tipo_usuario`**
-   Renomeia o campo do tipo de usuário para `nome_tipo_usuario`.
-
-7. **`INNER JOIN curso c ON e.id_curso = c.id_curso`**
-   Junta com `curso` (alias **`c`**) para obter o nome do curso.
-
-8. **`c.nome AS nome_curso`**
-   Renomeia o campo do curso para `nome_curso`.
-
-9. **`INNER JOIN instituicao i ON e.id_instituicao = i.id_instituicao`**
-   Conecta com `instituicao` (alias **`i`**) para obter nome, tipo e CNPJ da instituição.
-
-10. **`i.nome AS nome_instituicao, i.tipo AS tipo_instituicao, i.cnpj`**
-    Renomeia e inclui os campos da instituição.
-
-11. **`WHERE tu.nome = 'aluno'`**
-    Filtra apenas os registros cujo tipo de usuário é “aluno”.
-
-**Objetivo:**
-Reunir, em uma única consulta, informações dispersas em várias tabelas, facilitando relatórios e consultas que precisem dos detalhes completos do estagiário.
+> Cada link acima aponta para o README específico contendo detalhes, requisitos, modelagens e implementações referentes à respectiva disciplina. Quando tiver o conteúdo de cada entrega, basta atualizar os arquivos referenciados.
