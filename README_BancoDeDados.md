@@ -32,7 +32,7 @@ O sistema **SIESU – Sistema de Estágio Unificado** visa facilitar a gestão d
 
 ### Modelo Físico
 
-[Modelo Físico - Script SQL](docs/banco-dados/entregas/M%20Fisico.sql)
+[Modelo Físico - Script SQL](docs/banco-dados/entregas/M%20Fisico)
 
 ---
 
@@ -141,6 +141,29 @@ INNER JOIN instituicao i
    ON c.id_instituicao = i.id_instituicao
 ;
 ```
+
+---
+
+## View vw_estagios_pendentes
+
+- **Objetivo**: 
+
+Selecionar e exibir informações dos estágios que possuem status igual a 'Pendente', permitindo a visualização dos dados do estagiário, curso, professor responsável, escola, área de atuação, status e data_criacao. <br>
+A view facilita o acompanhamento de estágios que ainda estão pendentes, fornecendo recurso de consulta rápida e organizada para controle.
+
+- [Script SQL - View](docs/banco-dados/entregas/view%20vw_estagios_pendentes)
+
+---
+
+## Procedure sp_concluir_estagio
+
+- **Objetivo**: 
+
+Atualizar o status de um estágio para 'Concluído', mas somente se ele tiver pelo menos uma etapa com etapa = 'Finalizado'.<br>
+   1. Se existir essa etapa, atualiza o registro.
+   2. Se não existir, emite uma mensagem de aviso e não faz nada.
+
+- [Script SQL - Procedure](docs/banco-dados/entregas/procedure)
 
 ---
 
