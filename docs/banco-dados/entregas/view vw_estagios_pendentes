@@ -1,0 +1,26 @@
+CREATE VIEW vw_estagios_pendentes AS
+SELECT
+   e.id_estagio,
+   u_est.nome AS nome_estagiario,
+   c.nome AS curso,
+   u_prof.nome AS nome_professor,
+   es.nome AS escola,
+   a.nome AS area,
+   e.status,
+   e.data_criacao
+FROM estagio e
+INNER JOIN estagiario estg
+   ON e.id_estagiario = estg.id_estagiario
+INNER JOIN usuario u_est
+   ON estg.id_usuario = u_est.id_usuario
+INNER JOIN curso c
+   ON estg.id_curso = c.id_curso
+INNER JOIN professor p
+   ON e.id_professor = p.id_professor
+INNER JOIN usuario u_prof
+   ON p.id_usuario = u_prof.id_usuario
+INNER JOIN escola es
+   ON e.id_escola = es.id_escola
+INNER JOIN area a
+   ON e.id_area = a.id_area
+WHERE upper(e.status) = 'PENDENTE';

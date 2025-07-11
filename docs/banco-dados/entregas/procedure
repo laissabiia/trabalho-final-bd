@@ -1,0 +1,23 @@
+CREATE OR REPLACE PROCEDURE sp_concluir_estagio(p_id_estagio INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+   v_count_etapas INT;
+BEGIN
+   -- Verifica quantas etapas "Finalizado" existem para o estágio informado
+   SELECT COUNT(*) INTO v_count_etapas
+   FROM estagio_etapa
+   WHERE id_estagio = p_id_estagio
+     AND etapa = 'Finalizado';
+   -- Se não encontrou nenhuma etapa finalizada, não atualiza
+   IF v_count_etapas = 0 THEN
+       RAISE NOTICE 'Nenhuma etapa finalizada encontrada. O estágio não pode ser concluído.';
+       RETURN;
+   END IF;
+   -- Caso contrário, atualiza o status do estágio
+   UPDATE estagio
+   SET status = 'Concluído'
+   WHERE id_estagio = p_id_estagio;
+   RAISE NOTICE 'Estágio % concluído com sucesso.', p_id_estagio;
+END;
+$$;

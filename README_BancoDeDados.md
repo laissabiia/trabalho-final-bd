@@ -1,4 +1,4 @@
-# SIESU – Sistema de Estágio Unificado
+## SIESU – Sistema de Estágio Unificado
 
 **Banco de Dados Turma CIC0097 – 01/2025**
 **Profa. Maristela Holanda**
@@ -20,20 +20,21 @@ O sistema **SIESU – Sistema de Estágio Unificado** visa facilitar a gestão d
 * Registro de etapas de estágio e acompanhamento da documentação necessária;
 * Armazenamento de documentos e eventos na blockchain, garantindo integridade e histórico imutável.
 
-## Documento final de entrega do trabalho:
-[link - arquivo .docx](docs/Carlos_Laissa_Robson_Projeto_Final_08_07.docx)
+---
 
-## Modelo Entidade-Relacionamento (MER)
+### Modelo Entidade-Relacionamento (MER)
 
-![MER do SIESU](docs/imagens/mer.png)
+![Modelo Entidade Relacionamento (MER)](docs/banco-dados/entregas/MER%20-%20SIESU.drawio.png)
 
-## Modelo Relacional (MR)
+### Modelo Relacional (MR)
 
-![Modelo Relacional](docs/imagens/mr.png)
+![Modelo Relacional (MR)](docs/banco-dados/entregas/MR%20-%20SIESU.DBeaver.png)
 
-## Modelagem Lógica
+### Modelo Físico
 
-![Figura 3 - Modelagem Lógica](docs/imagens/modelagem_logica.png)
+[Modelo Físico - Script SQL](docs/banco-dados/entregas/M%20Fisico.sql)
+
+---
 
 ## Álgebra Relacional
 
@@ -84,19 +85,21 @@ O sistema **SIESU – Sistema de Estágio Unificado** visa facilitar a gestão d
 )
 ```
 
+---
+
 ## Formas Normais
 
-### 1ª Forma Normal (1FN)
+- 1ª Forma Normal (1FN)
 
 * **Regra**: Todos os campos contêm valores atômicos e não repetidos em uma única célula.
 * **Conclusão**: A tabela `tb_estagiario_detalhado` atende à 1FN.
 
-### 2ª Forma Normal (2FN)
+- 2ª Forma Normal (2FN)
 
 * **Regra**: Estar em 1FN e todos os atributos não-chave dependem da chave primária inteira.
 * **Conclusão**: Há apenas uma chave candidata (`id_estagiario`), e todos os atributos não-chave dependem dela. Portanto, atende à 2FN.
 
-### 3ª Forma Normal (3FN)
+- 3ª Forma Normal (3FN)
 
 * **Regra**: Estar em 2FN e nenhum atributo não-chave depende transitivamente da chave primária.
 * **Observação**: Existem dependências transitivas:
@@ -113,29 +116,33 @@ O sistema **SIESU – Sistema de Estágio Unificado** visa facilitar a gestão d
   * `tb_curso` (PK: `id_curso`)
   * `tb_instituicao` (PK: `id_instituicao`)
 
-## Script SQL para `tb_estagiario_detalhado`
+### Script SQL para `tb_estagiario_detalhado`
 
 ```sql
 SELECT
-  e.*,
-  u.nome AS nome_usuario,
-  u.email AS email_usuario,
-  u.senha AS senha_usuario,
-  u.id_tipo AS id_tipo_usuario,
-  tu.nome AS nome_tipo_usuario,
-  c.nome AS nome_curso,
-  i.nome AS nome_instituicao,
-  i.tipo AS tipo_instituicao,
-  i.cnpj
+   e.*,
+   u.nome AS nome_usuario,
+   u.email AS email_usuaio,
+   u.senha AS senha_usuario,
+   u.id_tipo AS id_tipo_usuario,
+   tu.nome AS nome_tipo_usuario,
+   c.nome AS nome_curso,
+   i.nome AS nome_instituicao,
+   i.tipo AS tipo_instituicao,
+   i.cnpj 
 FROM estagiario e
-INNER JOIN usuario u ON e.id_usuario = u.id_usuario
-INNER JOIN tipo_usuario tu ON u.id_tipo = tu.id_tipo
-INNER JOIN curso c ON e.id_curso = c.id_curso
-INNER JOIN instituicao i ON e.id_instituicao = i.id_instituicao
-WHERE tu.nome = 'aluno';
+INNER JOIN usuario u
+   ON e.id_usuario = u.id_usuario
+INNER JOIN tipo_usuario tu
+   ON u.id_tipo = tu.id_tipo
+INNER JOIN curso c
+   ON e.id_curso = c.id_curso
+INNER JOIN instituicao i
+   ON c.id_instituicao = i.id_instituicao
+;
 ```
 
-![Figura 4 - Tabela tb\_estagiario\_detalhado](docs/imagens/tb_estagiario_detalhado.png)
+---
 
 ## Pasta de Models
 
@@ -175,7 +182,7 @@ async function getEstagiariosDetalhados() {
 module.exports = { getEstagiariosDetalhados };
 ```
 
-## Explicação do SELECT de Exemplo
+### Explicação do SELECT de Exemplo
 
 O `SELECT` acima cria uma visão agregada com detalhes do estagiário, do usuário, do tipo, do curso e da instituição. Veja a explicação passo a passo:
 

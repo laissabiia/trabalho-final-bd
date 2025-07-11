@@ -1,0 +1,184 @@
+-- Tabela de regional
+CREATE TABLE public.regional (
+	id_regional serial4 NOT NULL,
+	nome varchar(100) NOT NULL,
+	email varchar(100) NULL,
+	CONSTRAINT regional_pkey PRIMARY KEY (id_regional)
+);
+
+-- Tabela de escolas
+CREATE TABLE public.escola (
+	id_escola serial4 NOT NULL,
+	nome varchar(150) NOT NULL,
+	cnpj varchar(18) NOT NULL,
+	endereco varchar(200) NULL,
+	id_regional int4 NOT NULL,
+	CONSTRAINT escola_cnpj_key UNIQUE (cnpj),
+	CONSTRAINT escola_pkey PRIMARY KEY (id_escola)
+);
+
+-- public.escola chaves estrangeiras
+ALTER TABLE public.escola ADD CONSTRAINT escola_id_regional_fkey FOREIGN KEY (id_regional) REFERENCES public.regional(id_regional);
+
+
+-- Tabela de telefone regional
+CREATE TABLE public.telefone_regional (
+	id_telefone serial4 NOT NULL,
+	id_regional int4 NOT NULL,
+	numero varchar(20) NOT NULL,
+	CONSTRAINT telefone_regional_pkey PRIMARY KEY (id_telefone)
+);
+
+-- public.telefone_regional chaves estrangeiras
+ALTER TABLE public.telefone_regional ADD CONSTRAINT telefone_regional_id_regional_fkey FOREIGN KEY (id_regional) REFERENCES public.regional(id_regional) ON DELETE CASCADE;
+
+-- Tabela de telefone escola
+CREATE TABLE public.telefone_escola (
+	id_telefone serial4 NOT NULL,
+	id_escola int4 NOT NULL,
+	numero varchar(20) NOT NULL,
+	CONSTRAINT telefone_escola_pkey PRIMARY KEY (id_telefone)
+);
+
+-- public.telefone_escola chaves estrangeiras
+ALTER TABLE public.telefone_escola ADD CONSTRAINT telefone_escola_id_escola_fkey FOREIGN KEY (id_escola) REFERENCES public.escola(id_escola) ON DELETE CASCADE;
+
+-- Tabela de instituição
+CREATE TABLE public.instituicao (
+	id_instituicao serial4 NOT NULL,
+	nome varchar(150) NOT NULL,
+	tipo varchar(50) NULL,
+	cnpj varchar(18) NULL,
+	CONSTRAINT instituicao_cnpj_key UNIQUE (cnpj),
+	CONSTRAINT instituicao_pkey PRIMARY KEY (id_instituicao)
+);
+
+-- Tabela de curso
+CREATE TABLE public.curso (
+	id_curso serial4 NOT NULL,
+	nome varchar(100) NOT NULL,
+	id_instituicao int4 NOT NULL,
+	CONSTRAINT curso_pkey PRIMARY KEY (id_curso)
+);
+
+-- public.curso chaves estrangeiras
+ALTER TABLE public.curso ADD CONSTRAINT curso_id_instituicao_fkey FOREIGN KEY (id_instituicao) REFERENCES public.instituicao(id_instituicao);
+
+
+-- Tabela de estagiário
+CREATE TABLE public.estagiario (
+	id_estagiario serial4 NOT NULL,
+	id_usuario int4 NOT NULL,
+	id_curso int4 NOT NULL,
+	CONSTRAINT estagiario_id_usuario_key UNIQUE (id_usuario),
+	CONSTRAINT estagiario_pkey PRIMARY KEY (id_estagiario)
+);
+
+-- public.estagiario chaves estrangeiras
+ALTER TABLE public.estagiario ADD CONSTRAINT estagiario_id_curso_fkey FOREIGN KEY (id_curso) REFERENCES public.curso(id_curso);
+ALTER TABLE public.estagiario ADD CONSTRAINT estagiario_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuario(id_usuario) ON DELETE CASCADE;
+
+
+-- Tabela do tipo do usuário
+CREATE TABLE public.tipo_usuario (
+	id_tipo serial4 NOT NULL,
+	nome varchar(30) NOT NULL,
+	CONSTRAINT tipo_usuario_nome_key UNIQUE (nome),
+	CONSTRAINT tipo_usuario_pkey PRIMARY KEY (id_tipo)
+);
+
+-- Tabela de área do professor
+CREATE TABLE public.professor_area (
+	id_professor int4 NOT NULL,
+	id_area int4 NOT NULL,
+	CONSTRAINT professor_area_pkey PRIMARY KEY (id_professor, id_area)
+);
+
+
+-- public.professor_area chaves estrangeiras
+ALTER TABLE public.professor_area ADD CONSTRAINT professor_area_id_area_fkey FOREIGN KEY (id_area) REFERENCES public.area(id_area) ON DELETE CASCADE;
+ALTER TABLE public.professor_area ADD CONSTRAINT professor_area_id_professor_fkey FOREIGN KEY (id_professor) REFERENCES public.professor(id_professor) ON DELETE CASCADE;
+
+-- Tabela de modalidade da escola
+CREATE TABLE public.escola_modalidade (
+	id_escola int4 NOT NULL,
+	id_modalidade int4 NOT NULL,
+	CONSTRAINT escola_modalidade_pkey PRIMARY KEY (id_escola, id_modalidade)
+);
+
+
+-- public.escola_modalidade chaves estrangeiras
+ALTER TABLE public.escola_modalidade ADD CONSTRAINT escola_modalidade_id_escola_fkey FOREIGN KEY (id_escola) REFERENCES public.escola(id_escola) ON DELETE CASCADE;
+ALTER TABLE public.escola_modalidade ADD CONSTRAINT escola_modalidade_id_modalidade_fkey FOREIGN KEY (id_modalidade) REFERENCES public.modalidade(id_modalidade) ON DELETE CASCADE;
+
+-- Tabela de orientador
+CREATE TABLE public.orientador (
+	id_orientador serial4 NOT NULL,
+	id_usuario int4 NOT NULL,
+	id_instituicao int4 NOT NULL,
+	CONSTRAINT orientador_id_usuario_key UNIQUE (id_usuario),
+	CONSTRAINT orientador_pkey PRIMARY KEY (id_orientador)
+);
+
+
+-- public.orientador chaves estrangeiras
+ALTER TABLE public.orientador ADD CONSTRAINT orientador_id_instituicao_fkey FOREIGN KEY (id_instituicao) REFERENCES public.instituicao(id_instituicao);
+ALTER TABLE public.orientador ADD CONSTRAINT orientador_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuario(id_usuario) ON DELETE CASCADE;
+
+-- Tabela de estágio
+CREATE TABLE public.estagio (
+	id_estagio serial4 NOT NULL,
+	id_estagiario int4 NOT NULL,
+	id_professor int4 NOT NULL,
+	id_orientador int4 NOT NULL,
+	status varchar(30) NOT NULL,
+	data_criacao timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT estagio_pkey PRIMARY KEY (id_estagio)
+);
+
+-- public.estagio chaves estrangeiras
+ALTER TABLE public.estagio ADD CONSTRAINT estagio_id_estagiario_fkey FOREIGN KEY (id_estagiario) REFERENCES public.estagiario(id_estagiario);
+ALTER TABLE public.estagio ADD CONSTRAINT estagio_id_orientador_fkey FOREIGN KEY (id_orientador) REFERENCES public.orientador(id_orientador);
+ALTER TABLE public.estagio ADD CONSTRAINT estagio_id_professor_fkey FOREIGN KEY (id_professor) REFERENCES public.professor(id_professor);
+
+-- Tabela de documento do estágio
+CREATE TABLE public.documento_estagio (
+	id_documento serial4 NOT NULL,
+	id_estagio int4 NOT NULL,
+	tipo_documento varchar(50) NOT NULL,
+	caminho_pdf varchar(200) NOT NULL,
+	data_envio timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT documento_estagio_pkey PRIMARY KEY (id_documento)
+);
+
+-- public.documento_estagio chaves estrangeiras
+ALTER TABLE public.documento_estagio ADD CONSTRAINT documento_estagio_id_estagio_fkey FOREIGN KEY (id_estagio) REFERENCES public.estagio(id_estagio);
+
+-- Tabela de blockchain do registro
+CREATE TABLE public.blockchain_registro (
+	id_registro serial4 NOT NULL,
+	id_documento int4 NULL,
+	tipo_evento varchar(50) NOT NULL,
+	hash_blockchain varchar(150) NOT NULL,
+	data_registro timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT blockchain_registro_pkey PRIMARY KEY (id_registro)
+);
+
+-- public.blockchain_registro chaves estrangeiras
+ALTER TABLE public.blockchain_registro ADD CONSTRAINT blockchain_registro_id_documento_fkey FOREIGN KEY (id_documento) REFERENCES public.documento_estagio(id_documento);
+
+-- Tabela de etapa do estágio
+CREATE TABLE public.estagio_etapa (
+	id_etapa serial4 NOT NULL,
+	id_estagio int4 NOT NULL,
+	etapa varchar(50) NOT NULL,
+	data_inicio timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	data_fim timestamp NULL,
+	id_usuario_assinante int4 NULL,
+	CONSTRAINT estagio_etapa_pkey PRIMARY KEY (id_etapa)
+);
+
+
+-- public.estagio_etapa chaves estrangeiras
+ALTER TABLE public.estagio_etapa ADD CONSTRAINT estagio_etapa_id_estagio_fkey FOREIGN KEY (id_estagio) REFERENCES public.estagio(id_estagio);
+ALTER TABLE public.estagio_etapa ADD CONSTRAINT estagio_etapa_id_usuario_assinante_fkey FOREIGN KEY (id_usuario_assinante) REFERENCES public.usuario(id_usuario);
