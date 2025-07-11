@@ -50,4 +50,6 @@ Este projeto está sob a Licença MIT. Veja o arquivo [`LICENSE`](LICENSE).
 
 ---
 
-> Desenvolvido com 💻 por Carlos Iunes e Robson Silva.
+> Projeto desenvolvido conjuntamente com:
+> - Carlos Iunes [@eduardoiunes](https://github.com/eduardoiunes)
+> - Robson Silva [@ofbezerra2002](https://github.com/ofbezerra2002)
